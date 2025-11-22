@@ -12,7 +12,7 @@ services:
 
   cloudflared:
     image: cloudflare/cloudflared:latest
-    command: tunnel --no-autoupdate run --token eyJhIjoiZmRkNGRiNmY1ODc4MTE0OWVhMzg2YjNkMTcwOWNiNDciLCJ0IjoiZTU4MjcwMzgtZTY1My00Y2I3LWJlN2QtMWI1OWNhZWNkMzIwIiwicyI6IllqRTBabUUwWlRNdFpUZ3hNaTAwTURVNUxXSTBPV1l0WkRnMllXWmpaamhoTnpWaiJ9
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:?set tunnel token in env}
     depends_on:
       - app
     restart: unless-stopped

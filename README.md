@@ -51,6 +51,12 @@ python server_manage.py   # 默认 5001 端口
 
 ## Docker & Cloudflare 部署
 
+在启动前先准备 `.env`（已在 `.gitignore` 中，避免泄漏）并写入你的隧道 Token：
+
+```bash
+echo "CLOUDFLARE_TUNNEL_TOKEN=你的token" > .env
+```
+
 ```bash
 docker compose up -d
 docker compose logs -f cloudflared   # 查公网 URL
@@ -58,7 +64,7 @@ docker compose logs -f cloudflared   # 查公网 URL
 
 栈内包含：
 - `app`：基于 `Dockerfile` 构建的 Flask 服务（映射本地 `db*.csv` 到容器内）
-- `cloudflared`：使用你在 `docker-compose.yml` 中配置的 Tunnel Token 自动上线
+- `cloudflared`：从环境变量 `CLOUDFLARE_TUNNEL_TOKEN` 读取隧道 Token 自动上线
 
 如需自定义 `cloudflared` 行为，可将凭证、`config.yml` 映射进去或参照 [Cloudflare Tunnel 指南](CLOUDFLARE_TUNNEL.md)。
 
