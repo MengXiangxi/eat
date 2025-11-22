@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>吃什么 - 随机选择餐厅</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .random-section {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .random-section button {
+            background: white;
+            color: #f5576c;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 15px 40px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .random-section button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(245, 87, 108, 0.4);
+        }
+
+        .random-section button:active {
+            transform: translateY(0);
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 2em;
+            color: white;
+            font-weight: bold;
+            min-height: 50px;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .vendor-list {
+            display: grid;
+            gap: 10px;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .vendor-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .vendor-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .vendor-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .vendor-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .vendor-weight {
+            font-size: 14px;
+            color: #666;
+            background: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .vendor-item.zero-weight {
+            opacity: 0.7;
+        }
+
+        .vendor-item.zero-weight .vendor-name,
+        .vendor-item.zero-weight .vendor-weight {
+            color: #999;
+        }
+
+        .vendor-item.zero-weight .vendor-weight {
+            background: #f1f3f5;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        .sort-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .sort-control label {
+            color: #666;
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        .sort-control select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .sort-control select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .sort-control select:hover {
+            border-color: #764ba2;
+        }
+
+        .meal-item {
+            display: grid;
+            grid-template-columns: 100px 1fr 100px 80px;
+            gap: 15px;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .meal-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .meal-date {
+            font-size: 14px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .meal-order {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .meal-price {
+            font-size: 16px;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .meal-rate {
+            font-size: 14px;
+            color: #ff9800;
+        }
+
+        .read-only-notice {
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2d3436;
+        }
+
+        .read-only-notice h3 {
+            margin-bottom: 10px;
+            color: #e17055;
+        }
+
+        .manage-link {
+            display: inline-block;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: #74b9ff;
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+
+        .manage-link:hover {
+            background: #0984e3;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍽️ 吃什么</h1>
+
+        <div class="random-section">
+            <button onclick="randomSelect()">🎲 随机选择一家餐厅</button>
+            <div class="result" id="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>📋 商家列表 <span id="totalWeight" style="font-size: 0.8em; color: #666;"></span></h2>
+            <div class="sort-control">
+                <label for="sortSelect">排序方式：</label>
+                <select id="sortSelect" onchange="changeSortOrder()">
+                    <option value="default">默认顺序</option>
+                    <option value="name">按名称排序</option>
+                    <option value="weight">按权重排序</option>
+                </select>
+            </div>
+            <div class="vendor-list" id="vendorList"></div>
+        </div>
+
+        <div class="section">
+            <h2>📝 点餐记录</h2>
+            <div class="vendor-list" id="mealList"></div>
+        </div>
+    </div>
+
+    <script>
+        let vendors = [];
+        let originalVendors = []; // 保存原始顺序
+        let currentSortOrder = 'default'; // 当前排序方式
+        let meals = []; // 点餐记录
+        // Cloudflare Tunnel 同源访问（文件本地打开则回落到本地服务）
+        const API_URL = (window.location.protocol === 'file:')
+            ? 'http://localhost:5001/api'
+            : '/api';
+
+        function loadData() {
+            // 检查今天是否是北京时间星期四，并自动设定K记的权重
+            checkAndSetKJiWeight();
+ 
+            // 加载商家数据
+            fetch(API_URL + '/vendors')
+                .then(response => response.json())
+                .then(data => {
+                    originalVendors = data; // 保存原始顺序
+                    vendors = data;
+ 
+                    // 从localStorage恢复排序方式
+                    const savedSortOrder = localStorage.getItem('sortOrder');
+                    if (savedSortOrder) {
+                        currentSortOrder = savedSortOrder;
+                        document.getElementById('sortSelect').value = savedSortOrder;
+                        applySortOrder();
+                    }
+ 
+                    renderVendorList();
+                })
+                .catch(error => {
+                    console.error('Error loading data:', error);
+                    alert('加载数据失败，请确保服务器正在运行！');
+                });
+ 
+            // 加载点餐记录数据
+            fetch(API_URL + '/meals')
+                .then(response => response.json())
+                .then(data => {
+                    meals = data;
+                    renderMealList();
+                })
+                .catch(error => {
+                    console.error('Error loading meals:', error);
+                    alert('加载点餐记录失败，请确保服务器正在运行！');
+                });
+        }
+ 
+        // 检查今天是否是北京时间星期四，并自动设定K记的权重
+        function checkAndSetKJiWeight() {
+            // 获取北京时间（UTC+8）
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const beijingTime = new Date(utc + (3600000 * 8));
+ 
+            // 获取星期几（0=星期日, 1=星期一, ..., 4=星期四）
+            const dayOfWeek = beijingTime.getDay();
+ 
+            // 根据是否是星期四设定权重
+            const weight = (dayOfWeek === 4) ? 1000 : 100;
+ 
+            // 发送请求更新K记的权重
+            fetch(API_URL + '/vendors/0', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ vendor: 'K记', weight: weight })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.log('自动设定K记权重失败:', data.error);
+                } else {
+                    console.log('已自动设定K记权重为:', weight, '(今天是' + (dayOfWeek === 4 ? '星期四' : '非星期四') + ')');
+                }
+            })
+            .catch(error => {
+                console.error('Error setting K记 weight:', error);
+            });
+        }
+
+        function changeSortOrder() {
+            const sortSelect = document.getElementById('sortSelect');
+            currentSortOrder = sortSelect.value;
+
+            // 保存排序方式到localStorage
+            localStorage.setItem('sortOrder', currentSortOrder);
+
+            applySortOrder();
+            renderVendorList();
+        }
+
+        function applySortOrder() {
+            if (currentSortOrder === 'default') {
+                // 恢复原始顺序
+                vendors = [...originalVendors];
+            } else if (currentSortOrder === 'name') {
+                // 按名称排序（中文拼音排序）
+                vendors = [...originalVendors].sort(function(a, b) {
+                    return a.vendor.localeCompare(b.vendor, 'zh-CN');
+                });
+            } else if (currentSortOrder === 'weight') {
+                // 按权重降序排序
+                vendors = [...originalVendors].sort(function(a, b) {
+                    return b.weight - a.weight;
+                });
+            }
+        }
+
+        function renderVendorList() {
+            const listContainer = document.getElementById('vendorList');
+            const totalWeightElement = document.getElementById('totalWeight');
+
+            if (vendors.length === 0) {
+                listContainer.innerHTML = '<div class="empty-message">暂无商家</div>';
+                totalWeightElement.textContent = '';
+                return;
+            }
+
+            // 计算权重总和
+            const totalWeight = vendors.reduce(function(sum, vendor) {
+                return sum + vendor.weight;
+            }, 0);
+
+            // 更新商家数量和权重总和显示
+            totalWeightElement.textContent = '(商家数量: ' + vendors.length + ', 总权重: ' + totalWeight + ')';
+
+            listContainer.innerHTML = vendors.map(function(vendor, index) {
+                const zeroClass = vendor.weight === 0 ? ' zero-weight' : '';
+                return '<div class="vendor-item' + zeroClass + '" id="vendor-' + index + '">' +
+                    '<div class="vendor-info">' +
+                    '<span class="vendor-name" id="name-display-' + index + '">' + vendor.vendor + '</span>' +
+                    '<span class="vendor-weight" id="weight-display-' + index + '">权重: ' + vendor.weight + '</span>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function randomSelect() {
+            const resultDiv = document.getElementById('result');
+
+            if (vendors.length === 0) {
+                resultDiv.textContent = '没有可选择的商家！';
+                return;
+            }
+
+            const totalWeight = vendors.reduce(function(sum, vendor) {
+                return sum + vendor.weight;
+            }, 0);
+
+            if (totalWeight <= 0) {
+                resultDiv.textContent = '权重总和为0，无法随机选择';
+                return;
+            }
+
+            let random = Math.random() * totalWeight;
+
+            for (let i = 0; i < vendors.length; i++) {
+                random -= vendors[i].weight;
+                if (random <= 0) {
+                    resultDiv.textContent = '🎉 ' + vendors[i].vendor;
+                    return;
+                }
+            }
+
+            resultDiv.textContent = '🎉 ' + vendors[vendors.length - 1].vendor;
+        }
+
+        function renderMealList() {
+            const listContainer = document.getElementById('mealList');
+
+            if (meals.length === 0) {
+                listContainer.innerHTML = '<div class="empty-message">暂无点餐记录</div>';
+                return;
+            }
+
+            // 按日期倒序排序（最新的在前面）
+            const sortedMeals = [...meals].sort(function(a, b) {
+                return b.date.localeCompare(a.date);
+            });
+
+            listContainer.innerHTML = sortedMeals.map(function(meal, index) {
+                const stars = meal.rate ? '⭐'.repeat(meal.rate) : '';
+                const displayDate = '20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6);
+                const priceText = isNaN(meal.price) ? meal.price : Number(meal.price).toFixed(2);
+
+                return '<div class="meal-item" id="meal-' + index + '">' +
+                    '<span class="meal-date" id="meal-date-display-' + index + '">' + displayDate + '</span>' +
+                    '<span class="meal-order" id="meal-order-display-' + index + '">' + meal.order + '</span>' +
+                    '<span class="meal-price" id="meal-price-display-' + index + '">¥' + priceText + '</span>' +
+                    '<span class="meal-rate" id="meal-rate-display-' + index + '">' + stars + '</span>' +
+                    '</div>';
+            }).join('');
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+        });
+    </script>
+</body>
+</html>

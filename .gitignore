@@ -1,0 +1,57 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.egg-info/
+.Python
+build/
+dist/
+eggs/
+*.egg
+pip-wheel-metadata/
+
+# Virtual environments & tooling
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.*
+.envrc
+.python-version
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Tests & coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.cache/
+
+# Logs & runtime artifacts
+*.log
+*.pid
+
+# Local data stores (avoid leaking real records)
+db.csv
+db_meal.csv
+eat.db
+*.sqlite
+*.sqlite3
+
+# Cloudflare Tunnel credentials
+.cloudflared/
+config.yml
+
+# OS / misc
+.DS_Store
+Thumbs.db
+nohup.out
+
+# Docker overrides & local compose files
+docker-compose.override.yml
+docker-compose*.local.yml

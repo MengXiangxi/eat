@@ -1,0 +1,985 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>吃什么 - 随机选择餐厅</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 800px;
+            width: 100%;
+            padding: 40px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #667eea;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .section {
+            margin-bottom: 30px;
+        }
+
+        .section h2 {
+            color: #764ba2;
+            margin-bottom: 15px;
+            font-size: 1.5em;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .add-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .random-section {
+            text-align: center;
+            padding: 30px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            margin-bottom: 30px;
+        }
+
+        .random-section button {
+            background: white;
+            color: #f5576c;
+            font-size: 20px;
+            font-weight: bold;
+            padding: 15px 40px;
+        }
+
+        .result {
+            margin-top: 20px;
+            font-size: 2em;
+            color: white;
+            font-weight: bold;
+            min-height: 50px;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+
+        .vendor-list {
+            display: grid;
+            gap: 10px;
+            max-height: 750px;
+            overflow-y: auto;
+        }
+
+        .vendor-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .vendor-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .vendor-info {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .vendor-name {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .vendor-weight {
+            font-size: 14px;
+            color: #666;
+            background: #e9ecef;
+            padding: 5px 10px;
+            border-radius: 5px;
+        }
+
+        .vendor-item.zero-weight {
+            opacity: 0.7;
+        }
+
+        .vendor-item.zero-weight .vendor-name,
+        .vendor-item.zero-weight .vendor-weight {
+            color: #999;
+        }
+
+        .vendor-item.zero-weight .vendor-weight {
+            background: #f1f3f5;
+        }
+
+        .vendor-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .weight-edit-input {
+            width: 80px;
+            padding: 5px 8px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .name-edit-input {
+            width: 200px;
+            padding: 5px 8px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .edit-btn {
+            background: #28a745;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .edit-btn:hover {
+            background: #218838;
+        }
+
+        .save-btn {
+            background: #007bff;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .save-btn:hover {
+            background: #0056b3;
+        }
+
+        .cancel-btn {
+            background: #6c757d;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .cancel-btn:hover {
+            background: #545b62;
+        }
+
+        .delete-btn {
+            background: #dc3545;
+            padding: 8px 16px;
+            font-size: 14px;
+        }
+
+        .delete-btn:hover {
+            background: #c82333;
+        }
+
+        .empty-message {
+            text-align: center;
+            color: #999;
+            padding: 30px;
+            font-style: italic;
+        }
+
+        .export-section {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .export-section button {
+            flex: 1;
+        }
+
+        .sort-control {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .sort-control label {
+            color: #666;
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        .sort-control select {
+            padding: 8px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            background-color: white;
+            cursor: pointer;
+            transition: border-color 0.3s;
+        }
+
+        .sort-control select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .sort-control select:hover {
+            border-color: #764ba2;
+        }
+
+        .meal-item {
+            display: grid;
+            grid-template-columns: 100px 1fr 100px 80px auto;
+            gap: 15px;
+            align-items: center;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .meal-item:hover {
+            transform: translateX(5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .meal-date {
+            font-size: 14px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .meal-order {
+            font-size: 16px;
+            color: #333;
+        }
+
+        .meal-price {
+            font-size: 16px;
+            color: #28a745;
+            font-weight: bold;
+        }
+
+        .meal-rate {
+            font-size: 14px;
+            color: #ff9800;
+        }
+
+        .meal-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        input[type="date"] {
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="date"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .date-edit-input {
+            width: 100px;
+            padding: 5px 8px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .order-edit-input {
+            width: 100%;
+            padding: 5px 8px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .price-edit-input {
+            width: 80px;
+            padding: 5px 8px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .rate-edit-input {
+            width: 60px;
+            padding: 5px 8px;
+            border: 2px solid #667eea;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍽️ 吃什么</h1>
+
+        <div class="random-section">
+            <button onclick="randomSelect()">🎲 随机选择一家餐厅</button>
+            <div class="result" id="result"></div>
+        </div>
+
+        <div class="section">
+            <h2>➕ 添加商家</h2>
+            <div class="add-form">
+                <input type="text" id="vendorName" placeholder="商家名称" />
+                <input type="number" id="vendorWeight" placeholder="权重" value="100" min="0" />
+                <button onclick="addVendor()">添加</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📋 商家列表 <span id="totalWeight" style="font-size: 0.8em; color: #666;"></span></h2>
+            <div class="sort-control">
+                <label for="sortSelect">排序方式：</label>
+                <select id="sortSelect" onchange="changeSortOrder()">
+                    <option value="default">默认顺序</option>
+                    <option value="name">按名称排序</option>
+                    <option value="weight">按权重排序</option>
+                </select>
+            </div>
+            <div class="vendor-list" id="vendorList"></div>
+        </div>
+
+        <div class="section">
+            <h2>🍜 添加点餐记录</h2>
+            <div class="add-form">
+                <input type="date" id="mealDate" />
+                <input type="text" id="mealOrder" placeholder="点餐内容" />
+                <input type="number" id="mealPrice" placeholder="价格" step="0.01" min="0" />
+                <input type="number" id="mealRate" placeholder="评价(1-5)" min="1" max="5" value="3" />
+                <button onclick="addMeal()">添加</button>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📝 点餐记录</h2>
+            <div class="vendor-list" id="mealList"></div>
+        </div>
+    </div>
+
+    <script>
+        let vendors = [];
+        let originalVendors = []; // 保存原始顺序
+        let currentSortOrder = 'default'; // 当前排序方式
+        let meals = []; // 点餐记录
+        // Use relative URL for Cloudflare Tunnel compatibility
+        const API_URL = window.location.origin + '/api';
+
+        function loadData() {
+            // 检查今天是否是北京时间星期四，并自动设定K记的权重
+            checkAndSetKJiWeight();
+
+            // 加载商家数据
+            fetch(API_URL + '/vendors')
+                .then(response => response.json())
+                .then(data => {
+                    originalVendors = data; // 保存原始顺序
+                    vendors = data;
+
+                    // 从localStorage恢复排序方式
+                    const savedSortOrder = localStorage.getItem('sortOrder');
+                    if (savedSortOrder) {
+                        currentSortOrder = savedSortOrder;
+                        document.getElementById('sortSelect').value = savedSortOrder;
+                        applySortOrder();
+                    }
+
+                    renderVendorList();
+                })
+                .catch(error => {
+                    console.error('Error loading data:', error);
+                    alert('加载数据失败，请确保服务器正在运行！');
+                });
+
+            // 加载点餐记录数据
+            fetch(API_URL + '/meals')
+                .then(response => response.json())
+                .then(data => {
+                    meals = data;
+                    renderMealList();
+                })
+                .catch(error => {
+                    console.error('Error loading meals:', error);
+                    alert('加载点餐记录失败，请确保服务器正在运行！');
+                });
+        }
+
+        // 检查今天是否是北京时间星期四，并自动设定K记的权重
+        function checkAndSetKJiWeight() {
+            // 获取北京时间（UTC+8）
+            const now = new Date();
+            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+            const beijingTime = new Date(utc + (3600000 * 8));
+
+            // 获取星期几（0=星期日, 1=星期一, ..., 4=星期四）
+            const dayOfWeek = beijingTime.getDay();
+
+            // 根据是否是星期四设定权重
+            const weight = (dayOfWeek === 4) ? 3000 : 100;
+
+            // 发送请求更新K记的权重
+            fetch(API_URL + '/vendors/0', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ vendor: 'K记', weight: weight })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.log('自动设定K记权重失败:', data.error);
+                } else {
+                    console.log('已自动设定K记权重为:', weight, '(今天是' + (dayOfWeek === 4 ? '星期四' : '非星期四') + ')');
+                }
+            })
+            .catch(error => {
+                console.error('Error setting K记 weight:', error);
+            });
+        }
+
+        function addVendor() {
+            const nameInput = document.getElementById('vendorName');
+            const weightInput = document.getElementById('vendorWeight');
+
+            const name = nameInput.value.trim();
+            const weight = parseInt(weightInput.value);
+
+            if (!name) {
+                alert('请输入商家名称！');
+                return;
+            }
+
+            if (Number.isNaN(weight) || weight < 0) {
+                alert('请输入有效的权重（大于等于0的整数）！');
+                return;
+            }
+
+            fetch(API_URL + '/vendors', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ vendor: name, weight: weight })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    originalVendors = data.vendors;
+                    vendors = data.vendors;
+                    applySortOrder();
+                    renderVendorList();
+                    nameInput.value = '';
+                    weightInput.value = '100';
+                    nameInput.focus();
+                }
+            })
+            .catch(error => {
+                console.error('Error adding vendor:', error);
+                alert('添加失败，请确保服务器正在运行！');
+            });
+        }
+
+        function deleteVendor(index) {
+            if (confirm('确定要删除 "' + vendors[index].vendor + '" 吗？')) {
+                fetch(API_URL + '/vendors/' + index, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        originalVendors = data.vendors;
+                        vendors = data.vendors;
+                        applySortOrder();
+                        renderVendorList();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting vendor:', error);
+                    alert('删除失败，请确保服务器正在运行！');
+                });
+            }
+        }
+
+        function renderVendorList() {
+            const listContainer = document.getElementById('vendorList');
+            const totalWeightElement = document.getElementById('totalWeight');
+
+            if (vendors.length === 0) {
+                listContainer.innerHTML = '<div class="empty-message">暂无商家，请先添加商家</div>';
+                totalWeightElement.textContent = '';
+                return;
+            }
+
+            // 计算权重总和
+            const totalWeight = vendors.reduce(function(sum, vendor) {
+                return sum + vendor.weight;
+            }, 0);
+
+            // 更新商家数量和权重总和显示
+            totalWeightElement.textContent = '(商家数量: ' + vendors.length + ', 总权重: ' + totalWeight + ')';
+
+            listContainer.innerHTML = vendors.map(function(vendor, index) {
+                const zeroClass = vendor.weight === 0 ? ' zero-weight' : '';
+                return '<div class="vendor-item' + zeroClass + '" id="vendor-' + index + '">' +
+                    '<div class="vendor-info">' +
+                    '<span class="vendor-name" id="name-display-' + index + '">' + vendor.vendor + '</span>' +
+                    '<input type="text" class="name-edit-input" id="name-input-' + index + '" value="' + vendor.vendor + '" style="display: none;" />' +
+                    '<span class="vendor-weight" id="weight-display-' + index + '">权重: ' + vendor.weight + '</span>' +
+                    '<input type="number" class="weight-edit-input" id="weight-input-' + index + '" value="' + vendor.weight + '" min="0" style="display: none;" />' +
+                    '</div>' +
+                    '<div class="vendor-actions">' +
+                    '<button class="edit-btn" id="edit-btn-' + index + '" onclick="editVendor(' + index + ')">编辑</button>' +
+                    '<button class="save-btn" id="save-btn-' + index + '" onclick="saveVendor(' + index + ')" style="display: none;">保存</button>' +
+                    '<button class="cancel-btn" id="cancel-btn-' + index + '" onclick="cancelEdit(' + index + ')" style="display: none;">取消</button>' +
+                    '<button class="delete-btn" onclick="deleteVendor(' + index + ')">删除</button>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function editVendor(index) {
+            document.getElementById('name-display-' + index).style.display = 'none';
+            document.getElementById('name-input-' + index).style.display = 'inline-block';
+            document.getElementById('weight-display-' + index).style.display = 'none';
+            document.getElementById('weight-input-' + index).style.display = 'inline-block';
+            document.getElementById('edit-btn-' + index).style.display = 'none';
+            document.getElementById('save-btn-' + index).style.display = 'inline-block';
+            document.getElementById('cancel-btn-' + index).style.display = 'inline-block';
+            document.getElementById('name-input-' + index).focus();
+        }
+
+        function cancelEdit(index) {
+            document.getElementById('name-display-' + index).style.display = 'inline-block';
+            document.getElementById('name-input-' + index).style.display = 'none';
+            document.getElementById('weight-display-' + index).style.display = 'inline-block';
+            document.getElementById('weight-input-' + index).style.display = 'none';
+            document.getElementById('edit-btn-' + index).style.display = 'inline-block';
+            document.getElementById('save-btn-' + index).style.display = 'none';
+            document.getElementById('cancel-btn-' + index).style.display = 'none';
+            document.getElementById('name-input-' + index).value = vendors[index].vendor;
+            document.getElementById('weight-input-' + index).value = vendors[index].weight;
+        }
+
+        function saveVendor(index) {
+            const newName = document.getElementById('name-input-' + index).value.trim();
+            const newWeight = parseInt(document.getElementById('weight-input-' + index).value);
+
+            if (!newName) {
+                alert('请输入商家名称！');
+                return;
+            }
+
+            if (Number.isNaN(newWeight) || newWeight < 0) {
+                alert('请输入有效的权重（大于等于0的整数）！');
+                return;
+            }
+
+            fetch(API_URL + '/vendors/' + index, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ vendor: newName, weight: newWeight })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    alert(data.error);
+                } else {
+                    originalVendors = data.vendors;
+                    vendors = data.vendors;
+                    applySortOrder();
+                    renderVendorList();
+                }
+            })
+            .catch(error => {
+                console.error('Error updating vendor:', error);
+                alert('更新失败，请确保服务器正在运行！');
+            });
+        }
+
+        function changeSortOrder() {
+            const sortSelect = document.getElementById('sortSelect');
+            currentSortOrder = sortSelect.value;
+
+            // 保存排序方式到localStorage
+            localStorage.setItem('sortOrder', currentSortOrder);
+
+            applySortOrder();
+            renderVendorList();
+        }
+
+        function applySortOrder() {
+            if (currentSortOrder === 'default') {
+                // 恢复原始顺序
+                vendors = [...originalVendors];
+            } else if (currentSortOrder === 'name') {
+                // 按名称排序（中文拼音排序）
+                vendors = [...originalVendors].sort(function(a, b) {
+                    return a.vendor.localeCompare(b.vendor, 'zh-CN');
+                });
+            } else if (currentSortOrder === 'weight') {
+                // 按权重降序排序
+                vendors = [...originalVendors].sort(function(a, b) {
+                    return b.weight - a.weight;
+                });
+            }
+        }
+
+        function randomSelect() {
+            const resultDiv = document.getElementById('result');
+
+            if (vendors.length === 0) {
+                resultDiv.textContent = '没有可选择的商家！';
+                return;
+            }
+
+            const totalWeight = vendors.reduce(function(sum, vendor) {
+                return sum + vendor.weight;
+            }, 0);
+
+            if (totalWeight <= 0) {
+                resultDiv.textContent = '权重总和为0，无法随机选择';
+                return;
+            }
+
+            let random = Math.random() * totalWeight;
+
+            for (let i = 0; i < vendors.length; i++) {
+                random -= vendors[i].weight;
+                if (random <= 0) {
+                    resultDiv.textContent = '🎉 ' + vendors[i].vendor;
+                    return;
+                }
+            }
+
+            resultDiv.textContent = '🎉 ' + vendors[vendors.length - 1].vendor;
+        }
+
+        // 点餐记录相关函数
+        async function addMeal() {
+            const dateInput = document.getElementById('mealDate');
+            const orderInput = document.getElementById('mealOrder');
+            const priceInput = document.getElementById('mealPrice');
+            const rateInput = document.getElementById('mealRate');
+
+            const date = dateInput.value.replace(/-/g, '').slice(2); // 转换为YYMMDD格式
+            const order = orderInput.value.trim();
+            const price = parseFloat(priceInput.value);
+            const rate = parseInt(rateInput.value);
+
+            if (!dateInput.value) {
+                alert('请选择日期！');
+                return;
+            }
+
+            if (!order) {
+                alert('请输入点餐内容！');
+                return;
+            }
+
+            if (isNaN(price) || price < 0) {
+                alert('请输入有效的价格！');
+                return;
+            }
+
+            if (isNaN(rate) || rate < 1 || rate > 5) {
+                alert('请输入1-5之间的评价！');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL + '/meals', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ date: date, order: order, price: price, rate: rate })
+                });
+                const data = await response.json();
+                if (!response.ok || data.error) {
+                    alert(data.error || '添加失败');
+                    return;
+                }
+
+                meals = data.meals;
+                renderMealList();
+                dateInput.value = '';
+                orderInput.value = '';
+                priceInput.value = '';
+                rateInput.value = '3';
+                orderInput.focus();
+            } catch (error) {
+                console.error('Error adding meal:', error);
+                alert('添加失败，请确保服务器正在运行！');
+            }
+        }
+
+        function renderMealList() {
+            const listContainer = document.getElementById('mealList');
+
+            if (meals.length === 0) {
+                listContainer.innerHTML = '<div class="empty-message">暂无点餐记录</div>';
+                return;
+            }
+
+            // 创建索引数组并按日期倒序排序（最新的在前面）
+            const sortedIndices = meals.map(function(meal, idx) {
+                return { meal: meal, originalIndex: idx };
+            }).sort(function(a, b) {
+                return b.meal.date.localeCompare(a.meal.date);
+            });
+
+            listContainer.innerHTML = sortedIndices.map(function(item) {
+                const meal = item.meal;
+                const index = item.originalIndex;
+                const stars = '⭐'.repeat(meal.rate);
+                const displayDate = '20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6);
+
+                return '<div class="meal-item" id="meal-' + index + '">' +
+                    '<span class="meal-date" id="meal-date-display-' + index + '">' + displayDate + '</span>' +
+                    '<input type="date" class="date-edit-input" id="meal-date-input-' + index + '" value="20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6) + '" style="display: none;" />' +
+
+                    '<span class="meal-order" id="meal-order-display-' + index + '">' + meal.order + '</span>' +
+                    '<input type="text" class="order-edit-input" id="meal-order-input-' + index + '" value="' + meal.order + '" style="display: none;" />' +
+
+                    '<span class="meal-price" id="meal-price-display-' + index + '">¥' + meal.price.toFixed(2) + '</span>' +
+                    '<input type="number" class="price-edit-input" id="meal-price-input-' + index + '" value="' + meal.price + '" step="0.01" min="0" style="display: none;" />' +
+
+                    '<span class="meal-rate" id="meal-rate-display-' + index + '">' + stars + '</span>' +
+                    '<input type="number" class="rate-edit-input" id="meal-rate-input-' + index + '" value="' + meal.rate + '" min="1" max="5" style="display: none;" />' +
+
+                    '<div class="meal-actions">' +
+                    '<button class="edit-btn" id="meal-edit-btn-' + index + '" onclick="editMeal(' + index + ')">编辑</button>' +
+                    '<button class="save-btn" id="meal-save-btn-' + index + '" onclick="saveMeal(' + index + ')" style="display: none;">保存</button>' +
+                    '<button class="cancel-btn" id="meal-cancel-btn-' + index + '" onclick="cancelEditMeal(' + index + ')" style="display: none;">取消</button>' +
+                    '<button class="delete-btn" onclick="deleteMeal(' + index + ')">删除</button>' +
+                    '</div>' +
+                    '</div>';
+            }).join('');
+        }
+
+        function editMeal(index) {
+            document.getElementById('meal-date-display-' + index).style.display = 'none';
+            document.getElementById('meal-date-input-' + index).style.display = 'inline-block';
+            document.getElementById('meal-order-display-' + index).style.display = 'none';
+            document.getElementById('meal-order-input-' + index).style.display = 'inline-block';
+            document.getElementById('meal-price-display-' + index).style.display = 'none';
+            document.getElementById('meal-price-input-' + index).style.display = 'inline-block';
+            document.getElementById('meal-rate-display-' + index).style.display = 'none';
+            document.getElementById('meal-rate-input-' + index).style.display = 'inline-block';
+            document.getElementById('meal-edit-btn-' + index).style.display = 'none';
+            document.getElementById('meal-save-btn-' + index).style.display = 'inline-block';
+            document.getElementById('meal-cancel-btn-' + index).style.display = 'inline-block';
+        }
+
+        function cancelEditMeal(index) {
+            document.getElementById('meal-date-display-' + index).style.display = 'inline-block';
+            document.getElementById('meal-date-input-' + index).style.display = 'none';
+            document.getElementById('meal-order-display-' + index).style.display = 'inline-block';
+            document.getElementById('meal-order-input-' + index).style.display = 'none';
+            document.getElementById('meal-price-display-' + index).style.display = 'inline-block';
+            document.getElementById('meal-price-input-' + index).style.display = 'none';
+            document.getElementById('meal-rate-display-' + index).style.display = 'inline-block';
+            document.getElementById('meal-rate-input-' + index).style.display = 'none';
+            document.getElementById('meal-edit-btn-' + index).style.display = 'inline-block';
+            document.getElementById('meal-save-btn-' + index).style.display = 'none';
+            document.getElementById('meal-cancel-btn-' + index).style.display = 'none';
+
+            const meal = meals[index];
+            const displayDate = '20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6);
+            document.getElementById('meal-date-input-' + index).value = displayDate;
+            document.getElementById('meal-order-input-' + index).value = meal.order;
+            document.getElementById('meal-price-input-' + index).value = meal.price;
+            document.getElementById('meal-rate-input-' + index).value = meal.rate;
+        }
+
+        async function saveMeal(index) {
+            const newDate = document.getElementById('meal-date-input-' + index).value.replace(/-/g, '').slice(2);
+            const newOrder = document.getElementById('meal-order-input-' + index).value.trim();
+            const newPrice = parseFloat(document.getElementById('meal-price-input-' + index).value);
+            const newRate = parseInt(document.getElementById('meal-rate-input-' + index).value);
+
+            if (!newDate) {
+                alert('请选择日期！');
+                return;
+            }
+
+            if (!newOrder) {
+                alert('请输入点餐内容！');
+                return;
+            }
+
+            if (isNaN(newPrice) || newPrice < 0) {
+                alert('请输入有效的价格！');
+                return;
+            }
+
+            if (isNaN(newRate) || newRate < 1 || newRate > 5) {
+                alert('请输入1-5之间的评价！');
+                return;
+            }
+
+            try {
+                const response = await fetch(API_URL + '/meals/' + index, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ date: newDate, order: newOrder, price: newPrice, rate: newRate })
+                });
+
+                const data = await response.json();
+                if (!response.ok || data.error) {
+                    alert(data.error || '更新失败');
+                    return;
+                }
+
+                meals = data.meals;
+                renderMealList();
+            } catch (error) {
+                console.error('Error updating meal:', error);
+                alert('更新失败，请确保服务器正在运行！');
+            }
+        }
+
+        function deleteMeal(index) {
+            if (confirm('确定要删除这条点餐记录吗？')) {
+                fetch(API_URL + '/meals/' + index, {
+                    method: 'DELETE'
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) {
+                        alert(data.error);
+                    } else {
+                        meals = data.meals;
+                        renderMealList();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error deleting meal:', error);
+                    alert('删除失败，请确保服务器正在运行！');
+                });
+            }
+        }
+
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadData();
+
+            // 设置默认日期为今天
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('mealDate').value = today;
+
+            document.getElementById('vendorName').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addVendor();
+                }
+            });
+
+            document.getElementById('vendorWeight').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addVendor();
+                }
+            });
+
+            document.getElementById('mealOrder').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addMeal();
+                }
+            });
+
+            document.getElementById('mealPrice').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addMeal();
+                }
+            });
+
+            document.getElementById('mealRate').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    addMeal();
+                }
+            });
+        });
+    </script>
+</body>
+</html>
