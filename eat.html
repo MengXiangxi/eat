@@ -458,6 +458,13 @@
             resultDiv.textContent = '🎉 ' + vendors[vendors.length - 1].vendor;
         }
 
+        function buildStars(rate) {
+            const value = Number(rate) || 0;
+            const fullStars = Math.floor(value);
+            const hasHalf = Math.abs(value - fullStars - 0.5) < 0.01;
+            return '★'.repeat(fullStars) + (hasHalf ? '⯨' : '');
+        }
+
         function renderMealList() {
             const listContainer = document.getElementById('mealList');
 
@@ -472,7 +479,8 @@
             });
 
             listContainer.innerHTML = sortedMeals.map(function(meal, index) {
-                const stars = meal.rate ? '⭐'.repeat(meal.rate) : '';
+                const stars = meal.rate ? buildStars(meal.rate) : '';
+                const rateText = (Math.round(Number(meal.rate || 0) * 2) / 2).toString().replace(/\.0$/, '');
                 const displayDate = '20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6);
                 const priceText = isNaN(meal.price) ? meal.price : Number(meal.price).toFixed(2);
 
@@ -480,7 +488,7 @@
                     '<span class="meal-date" id="meal-date-display-' + index + '">' + displayDate + '</span>' +
                     '<span class="meal-order" id="meal-order-display-' + index + '">' + meal.order + '</span>' +
                     '<span class="meal-price" id="meal-price-display-' + index + '">¥' + priceText + '</span>' +
-                    '<span class="meal-rate" id="meal-rate-display-' + index + '">' + stars + '</span>' +
+                    '<span class="meal-rate" id="meal-rate-display-' + index + '" title="评分: ' + rateText + '">' + stars + '</span>' +
                     '</div>';
             }).join('');
         }

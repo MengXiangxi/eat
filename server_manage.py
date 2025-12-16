@@ -73,9 +73,10 @@ def read_meals():
             except (TypeError, ValueError):
                 price = 0.0
             try:
-                rate = int(row.get('rate', 1) or 1)
+                rate = float(row.get('rate', 1) or 1)
+                rate = max(0.5, min(round(rate * 2) / 2, 5))
             except (TypeError, ValueError):
-                rate = 1
+                rate = 1.0
 
             meals.append({
                 'id': idx,
@@ -102,7 +103,7 @@ def save_meals(meals):
                 'date': meal.get('date', '').strip(),
                 'order': meal.get('order', '').strip(),
                 'price': float(meal.get('price', 0) or 0),
-                'rate': int(meal.get('rate', 1) or 1),
+                'rate': round(float(meal.get('rate', 1) or 1) * 2) / 2,
                 'image': (meal.get('image') or '').strip()
             })
 
@@ -237,15 +238,22 @@ def add_meal():
     if price is None or price < 0:
         return jsonify({'error': '价格必须大于等于0'}), 400
 
-    if rate is None or rate < 1 or rate > 5:
-        return jsonify({'error': '评价必须在1-5之间'}), 400
+    try:
+        rate_value = float(rate)
+    except (TypeError, ValueError):
+        return jsonify({'error': '评价必须是数字'}), 400
+
+    if rate_value < 0.5 or rate_value > 5 or abs(rate_value * 2 - round(rate_value * 2)) > 1e-6:
+        return jsonify({'error': '评价必须在0.5-5之间，且以0.5为步长'}), 400
+
+    rate_value = round(rate_value * 2) / 2
 
     meals = read_meals()
     meals.append({
         'date': date,
         'order': order,
         'price': float(price),
-        'rate': int(rate),
+        'rate': rate_value,
         'image': image
     })
     save_meals(meals)
@@ -278,9 +286,14 @@ def update_meal(index):
         meal['price'] = float(price)
 
     if rate is not None:
-        if rate < 1 or rate > 5:
-            return jsonify({'error': '评价必须在1-5之间'}), 400
-        meal['rate'] = int(rate)
+        try:
+            rate_value = float(rate)
+        except (TypeError, ValueError):
+            return jsonify({'error': '评价必须是数字'}), 400
+
+        if rate_value < 0.5 or rate_value > 5 or abs(rate_value * 2 - round(rate_value * 2)) > 1e-6:
+            return jsonify({'error': '评价必须在0.5-5之间，且以0.5为步长'}), 400
+        meal['rate'] = round(rate_value * 2) / 2
 
     if image is not None:
         meal['image'] = str(image).strip()

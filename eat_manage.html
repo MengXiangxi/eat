@@ -419,7 +419,7 @@
                 <input type="date" id="mealDate" />
                 <input type="text" id="mealOrder" placeholder="点餐内容" />
                 <input type="number" id="mealPrice" placeholder="价格" step="0.01" min="0" />
-                <input type="number" id="mealRate" placeholder="评价(1-5)" min="1" max="5" value="3" />
+                <input type="number" id="mealRate" placeholder="评价(0.5-5，0.5步长)" min="0.5" max="5" step="0.5" value="3" />
                 <button onclick="addMeal()">添加</button>
             </div>
         </div>
@@ -735,6 +735,13 @@
         }
 
         // 点餐记录相关函数
+        function buildStars(rate) {
+            const value = Number(rate) || 0;
+            const fullStars = Math.floor(value);
+            const hasHalf = Math.abs(value - fullStars - 0.5) < 0.01;
+            return '★'.repeat(fullStars) + (hasHalf ? '⯨' : '');
+        }
+
         async function addMeal() {
             const dateInput = document.getElementById('mealDate');
             const orderInput = document.getElementById('mealOrder');
@@ -744,7 +751,7 @@
             const date = dateInput.value.replace(/-/g, '').slice(2); // 转换为YYMMDD格式
             const order = orderInput.value.trim();
             const price = parseFloat(priceInput.value);
-            const rate = parseInt(rateInput.value);
+            const rate = parseFloat(rateInput.value);
 
             if (!dateInput.value) {
                 alert('请选择日期！');
@@ -761,10 +768,11 @@
                 return;
             }
 
-            if (isNaN(rate) || rate < 1 || rate > 5) {
-                alert('请输入1-5之间的评价！');
+            if (isNaN(rate) || rate < 0.5 || rate > 5 || Math.abs(rate * 2 - Math.round(rate * 2)) > 1e-6) {
+                alert('请输入0.5-5之间、0.5步长的评价！');
                 return;
             }
+            const normalizedRate = Math.round(rate * 2) / 2;
 
             try {
                 const response = await fetch(API_URL + '/meals', {
@@ -772,7 +780,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ date: date, order: order, price: price, rate: rate })
+                    body: JSON.stringify({ date: date, order: order, price: price, rate: normalizedRate })
                 });
                 const data = await response.json();
                 if (!response.ok || data.error) {
@@ -811,7 +819,8 @@
             listContainer.innerHTML = sortedIndices.map(function(item) {
                 const meal = item.meal;
                 const index = item.originalIndex;
-                const stars = '⭐'.repeat(meal.rate);
+                const stars = buildStars(meal.rate);
+                const rateText = (Math.round(Number(meal.rate || 0) * 2) / 2).toString().replace(/\.0$/, '');
                 const displayDate = '20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6);
 
                 return '<div class="meal-item" id="meal-' + index + '">' +
@@ -824,8 +833,8 @@
                     '<span class="meal-price" id="meal-price-display-' + index + '">¥' + meal.price.toFixed(2) + '</span>' +
                     '<input type="number" class="price-edit-input" id="meal-price-input-' + index + '" value="' + meal.price + '" step="0.01" min="0" style="display: none;" />' +
 
-                    '<span class="meal-rate" id="meal-rate-display-' + index + '">' + stars + '</span>' +
-                    '<input type="number" class="rate-edit-input" id="meal-rate-input-' + index + '" value="' + meal.rate + '" min="1" max="5" style="display: none;" />' +
+                    '<span class="meal-rate" id="meal-rate-display-' + index + '" title="评分: ' + rateText + '">' + stars + '</span>' +
+                    '<input type="number" class="rate-edit-input" id="meal-rate-input-' + index + '" value="' + meal.rate + '" min="0.5" max="5" step="0.5" style="display: none;" />' +
 
                     '<div class="meal-actions">' +
                     '<button class="edit-btn" id="meal-edit-btn-' + index + '" onclick="editMeal(' + index + ')">编辑</button>' +
@@ -876,7 +885,7 @@
             const newDate = document.getElementById('meal-date-input-' + index).value.replace(/-/g, '').slice(2);
             const newOrder = document.getElementById('meal-order-input-' + index).value.trim();
             const newPrice = parseFloat(document.getElementById('meal-price-input-' + index).value);
-            const newRate = parseInt(document.getElementById('meal-rate-input-' + index).value);
+            const newRate = parseFloat(document.getElementById('meal-rate-input-' + index).value);
 
             if (!newDate) {
                 alert('请选择日期！');
@@ -893,10 +902,11 @@
                 return;
             }
 
-            if (isNaN(newRate) || newRate < 1 || newRate > 5) {
-                alert('请输入1-5之间的评价！');
+            if (isNaN(newRate) || newRate < 0.5 || newRate > 5 || Math.abs(newRate * 2 - Math.round(newRate * 2)) > 1e-6) {
+                alert('请输入0.5-5之间、0.5步长的评价！');
                 return;
             }
+            const normalizedRate = Math.round(newRate * 2) / 2;
 
             try {
                 const response = await fetch(API_URL + '/meals/' + index, {
@@ -904,7 +914,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ date: newDate, order: newOrder, price: newPrice, rate: newRate })
+                    body: JSON.stringify({ date: newDate, order: newOrder, price: newPrice, rate: normalizedRate })
                 });
 
                 const data = await response.json();

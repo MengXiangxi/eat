@@ -4,6 +4,10 @@ import shutil
 import tempfile
 import unittest
 
+import sys
+
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
 import server_manage
 
 
@@ -61,7 +65,7 @@ class DatabaseTestCase(unittest.TestCase):
                 "date": "2024-01-02",
                 "order": "Noodles",
                 "price": 10.5,
-                "rate": 4,
+                "rate": 4.5,
                 "image": "pic.png",
             },
         )
@@ -72,21 +76,21 @@ class DatabaseTestCase(unittest.TestCase):
         meal = created["meals"][0]
         self.assertEqual(meal["order"], "Noodles")
         self.assertAlmostEqual(meal["price"], 10.5)
-        self.assertEqual(meal["rate"], 4)
+        self.assertAlmostEqual(meal["rate"], 4.5)
 
-        update_resp = self.client.put("/api/meals/0", json={"price": 12.0, "rate": 5})
+        update_resp = self.client.put("/api/meals/0", json={"price": 12.0, "rate": 3.5})
         self.assertEqual(update_resp.status_code, 200)
         updated = update_resp.get_json()
 
         self.assertTrue(updated["success"])
         updated_meal = updated["meals"][0]
         self.assertAlmostEqual(updated_meal["price"], 12.0)
-        self.assertEqual(updated_meal["rate"], 5)
+        self.assertAlmostEqual(updated_meal["rate"], 3.5)
 
         with open(server_manage.CSV_MEAL_FILE, newline='', encoding='utf-8') as f:
             rows = list(csv.DictReader(f))
         self.assertEqual(float(rows[0]["price"]), 12.0)
-        self.assertEqual(int(rows[0]["rate"]), 5)
+        self.assertAlmostEqual(float(rows[0]["rate"]), 3.5)
 
 
 if __name__ == "__main__":
