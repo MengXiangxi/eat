@@ -219,6 +219,17 @@
             color: #333;
         }
 
+        .meal-main {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .meal-note {
+            margin-top: 4px;
+            font-size: 14px;
+            color: #666;
+        }
+
         .meal-price {
             font-size: 16px;
             color: #28a745;
@@ -290,41 +301,35 @@
 
     <script>
         let vendors = [];
-        let originalVendors = []; // 保存原始顺序
-        let currentSortOrder = 'default'; // 当前排序方式
-        let meals = []; // 点餐记录
-        // Cloudflare Tunnel 同源访问（文件本地打开则回落到本地服务）
+        let originalVendors = [];
+        let currentSortOrder = 'default';
+        let meals = [];
         const API_URL = (window.location.protocol === 'file:')
             ? 'http://localhost:5001/api'
             : '/api';
 
         function loadData() {
-            // 检查今天是否是北京时间星期四，并自动设定K记的权重
-            checkAndSetKJiWeight();
- 
-            // 加载商家数据
             fetch(API_URL + '/vendors')
                 .then(response => response.json())
                 .then(data => {
-                    originalVendors = data; // 保存原始顺序
+                    originalVendors = data;
                     vendors = data;
- 
-                    // 从localStorage恢复排序方式
+                    checkAndSetKJiWeight();
+
                     const savedSortOrder = localStorage.getItem('sortOrder');
                     if (savedSortOrder) {
                         currentSortOrder = savedSortOrder;
                         document.getElementById('sortSelect').value = savedSortOrder;
                         applySortOrder();
                     }
- 
+
                     renderVendorList();
                 })
                 .catch(error => {
                     console.error('Error loading data:', error);
                     alert('加载数据失败，请确保服务器正在运行！');
                 });
- 
-            // 加载点餐记录数据
+
             fetch(API_URL + '/meals')
                 .then(response => response.json())
                 .then(data => {
@@ -336,22 +341,23 @@
                     alert('加载点餐记录失败，请确保服务器正在运行！');
                 });
         }
- 
-        // 检查今天是否是北京时间星期四，并自动设定K记的权重
+
         function checkAndSetKJiWeight() {
-            // 获取北京时间（UTC+8）
+            const kji = originalVendors.find(function(vendor) {
+                return vendor.vendor === 'K记';
+            });
+
+            if (!kji) {
+                return;
+            }
+
             const now = new Date();
             const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
             const beijingTime = new Date(utc + (3600000 * 8));
- 
-            // 获取星期几（0=星期日, 1=星期一, ..., 4=星期四）
             const dayOfWeek = beijingTime.getDay();
- 
-            // 根据是否是星期四设定权重
             const weight = (dayOfWeek === 4) ? 1000 : 100;
- 
-            // 发送请求更新K记的权重
-            fetch(API_URL + '/vendors/0', {
+
+            fetch(API_URL + '/vendors/' + kji.id, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -362,9 +368,12 @@
             .then(data => {
                 if (data.error) {
                     console.log('自动设定K记权重失败:', data.error);
-                } else {
-                    console.log('已自动设定K记权重为:', weight, '(今天是' + (dayOfWeek === 4 ? '星期四' : '非星期四') + ')');
+                    return;
                 }
+                originalVendors = data.vendors;
+                applySortOrder();
+                renderVendorList();
+                console.log('已自动设定K记权重为:', weight, '(今天是' + (dayOfWeek === 4 ? '星期四' : '非星期四') + ')');
             })
             .catch(error => {
                 console.error('Error setting K记 weight:', error);
@@ -374,25 +383,19 @@
         function changeSortOrder() {
             const sortSelect = document.getElementById('sortSelect');
             currentSortOrder = sortSelect.value;
-
-            // 保存排序方式到localStorage
             localStorage.setItem('sortOrder', currentSortOrder);
-
             applySortOrder();
             renderVendorList();
         }
 
         function applySortOrder() {
             if (currentSortOrder === 'default') {
-                // 恢复原始顺序
                 vendors = [...originalVendors];
             } else if (currentSortOrder === 'name') {
-                // 按名称排序（中文拼音排序）
                 vendors = [...originalVendors].sort(function(a, b) {
                     return a.vendor.localeCompare(b.vendor, 'zh-CN');
                 });
             } else if (currentSortOrder === 'weight') {
-                // 按权重降序排序
                 vendors = [...originalVendors].sort(function(a, b) {
                     return b.weight - a.weight;
                 });
@@ -409,20 +412,18 @@
                 return;
             }
 
-            // 计算权重总和
             const totalWeight = vendors.reduce(function(sum, vendor) {
                 return sum + vendor.weight;
             }, 0);
 
-            // 更新商家数量和权重总和显示
             totalWeightElement.textContent = '(商家数量: ' + vendors.length + ', 总权重: ' + totalWeight + ')';
 
-            listContainer.innerHTML = vendors.map(function(vendor, index) {
+            listContainer.innerHTML = vendors.map(function(vendor) {
                 const zeroClass = vendor.weight === 0 ? ' zero-weight' : '';
-                return '<div class="vendor-item' + zeroClass + '" id="vendor-' + index + '">' +
+                return '<div class="vendor-item' + zeroClass + '">' +
                     '<div class="vendor-info">' +
-                    '<span class="vendor-name" id="name-display-' + index + '">' + vendor.vendor + '</span>' +
-                    '<span class="vendor-weight" id="weight-display-' + index + '">权重: ' + vendor.weight + '</span>' +
+                    '<span class="vendor-name">' + vendor.vendor + '</span>' +
+                    '<span class="vendor-weight">权重: ' + vendor.weight + '</span>' +
                     '</div>' +
                     '</div>';
             }).join('');
@@ -465,6 +466,22 @@
             return '★'.repeat(fullStars) + (hasHalf ? '⯨' : '');
         }
 
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function getMealOrderHtml(meal) {
+            var note = (meal.order || '').trim();
+            var name = meal.vendor_name || '';
+            return '<div class="meal-main">' + escapeHtml(name) + '</div>' +
+                (note ? '<div class="meal-note">' + escapeHtml(note) + '</div>' : '');
+        }
+
         function renderMealList() {
             const listContainer = document.getElementById('mealList');
 
@@ -473,22 +490,24 @@
                 return;
             }
 
-            // 按日期倒序排序（最新的在前面）
             const sortedMeals = [...meals].sort(function(a, b) {
+                if (a.date === b.date) {
+                    return b.id - a.id;
+                }
                 return b.date.localeCompare(a.date);
             });
 
-            listContainer.innerHTML = sortedMeals.map(function(meal, index) {
+            listContainer.innerHTML = sortedMeals.map(function(meal) {
                 const stars = meal.rate ? buildStars(meal.rate) : '';
                 const rateText = (Math.round(Number(meal.rate || 0) * 2) / 2).toString().replace(/\.0$/, '');
                 const displayDate = '20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6);
                 const priceText = isNaN(meal.price) ? meal.price : Number(meal.price).toFixed(2);
 
-                return '<div class="meal-item" id="meal-' + index + '">' +
-                    '<span class="meal-date" id="meal-date-display-' + index + '">' + displayDate + '</span>' +
-                    '<span class="meal-order" id="meal-order-display-' + index + '">' + meal.order + '</span>' +
-                    '<span class="meal-price" id="meal-price-display-' + index + '">¥' + priceText + '</span>' +
-                    '<span class="meal-rate" id="meal-rate-display-' + index + '" title="评分: ' + rateText + '">' + stars + '</span>' +
+                return '<div class="meal-item">' +
+                    '<span class="meal-date">' + displayDate + '</span>' +
+                    '<span class="meal-order">' + getMealOrderHtml(meal) + '</span>' +
+                    '<span class="meal-price">¥' + priceText + '</span>' +
+                    '<span class="meal-rate" title="评分: ' + rateText + '">' + stars + '</span>' +
                     '</div>';
             }).join('');
         }

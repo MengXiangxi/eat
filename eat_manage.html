@@ -25,7 +25,7 @@
             background: white;
             border-radius: 20px;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 800px;
+            max-width: 1100px;
             width: 100%;
             padding: 40px;
         }
@@ -53,22 +53,35 @@
             display: flex;
             gap: 10px;
             margin-bottom: 20px;
+            flex-wrap: wrap;
         }
 
         input[type="text"],
-        input[type="number"] {
+        input[type="number"],
+        input[type="date"],
+        select,
+        textarea {
             flex: 1;
             padding: 12px;
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 16px;
             transition: border-color 0.3s;
+            font-family: inherit;
         }
 
         input[type="text"]:focus,
-        input[type="number"]:focus {
+        input[type="number"]:focus,
+        input[type="date"]:focus,
+        select:focus,
+        textarea:focus {
             outline: none;
             border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 48px;
         }
 
         button {
@@ -182,9 +195,11 @@
             background: #f1f3f5;
         }
 
-        .vendor-actions {
+        .vendor-actions,
+        .meal-actions {
             display: flex;
             gap: 8px;
+            flex-wrap: wrap;
         }
 
         .weight-edit-input {
@@ -250,16 +265,6 @@
             font-style: italic;
         }
 
-        .export-section {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-
-        .export-section button {
-            flex: 1;
-        }
-
         .sort-control {
             display: flex;
             align-items: center;
@@ -273,30 +278,11 @@
             font-weight: normal;
         }
 
-        .sort-control select {
-            padding: 8px 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
-            background-color: white;
-            cursor: pointer;
-            transition: border-color 0.3s;
-        }
-
-        .sort-control select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .sort-control select:hover {
-            border-color: #764ba2;
-        }
-
         .meal-item {
             display: grid;
-            grid-template-columns: 100px 1fr 100px 80px auto;
+            grid-template-columns: 100px minmax(220px, 2fr) 100px 90px auto;
             gap: 15px;
-            align-items: center;
+            align-items: start;
             padding: 15px;
             background: #f8f9fa;
             border-radius: 10px;
@@ -317,6 +303,19 @@
         .meal-order {
             font-size: 16px;
             color: #333;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .meal-main {
+            font-weight: bold;
+            color: #333;
+        }
+
+        .meal-note {
+            margin-top: 4px;
+            font-size: 14px;
+            color: #666;
         }
 
         .meal-price {
@@ -330,56 +329,44 @@
             color: #ff9800;
         }
 
-        .meal-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        input[type="date"] {
-            padding: 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-
-        input[type="date"]:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
-        .date-edit-input {
-            width: 100px;
-            padding: 5px 8px;
-            border: 2px solid #667eea;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-
-        .order-edit-input {
+        .date-edit-input,
+        .price-edit-input,
+        .rate-edit-input,
+        .meal-vendor-select,
+        .meal-note-input {
             width: 100%;
-            padding: 5px 8px;
-            border: 2px solid #667eea;
-            border-radius: 5px;
             font-size: 14px;
         }
 
-        .price-edit-input {
-            width: 80px;
-            padding: 5px 8px;
-            border: 2px solid #667eea;
-            border-radius: 5px;
-            font-size: 14px;
+        .meal-note-input {
+            min-height: 40px;
+            padding: 8px;
         }
 
-        .rate-edit-input {
-            width: 60px;
-            padding: 5px 8px;
-            border: 2px solid #667eea;
-            border-radius: 5px;
-            font-size: 14px;
+        .meal-order-editor {
+            display: none;
+            width: 100%;
         }
 
+        .meal-order-editor.active {
+            display: block;
+        }
+
+        .meal-order-editor .meal-vendor-select {
+            margin-bottom: 8px;
+        }
+
+        .meal-other-hint {
+            margin-top: 6px;
+            font-size: 12px;
+            color: #777;
+        }
+
+        @media (max-width: 900px) {
+            .meal-item {
+                grid-template-columns: 1fr;
+            }
+        }
     </style>
 </head>
 <body>
@@ -417,7 +404,8 @@
             <h2>🍜 添加点餐记录</h2>
             <div class="add-form">
                 <input type="date" id="mealDate" />
-                <input type="text" id="mealOrder" placeholder="点餐内容" />
+                <select id="mealVendor"></select>
+                <textarea id="mealOrder" placeholder="可选：套餐/备注"></textarea>
                 <input type="number" id="mealPrice" placeholder="价格" step="0.01" min="0" />
                 <input type="number" id="mealRate" placeholder="评价(0.5-5，0.5步长)" min="0.5" max="5" step="0.5" value="3" />
                 <button onclick="addMeal()">添加</button>
@@ -432,24 +420,123 @@
 
     <script>
         let vendors = [];
-        let originalVendors = []; // 保存原始顺序
-        let currentSortOrder = 'default'; // 当前排序方式
-        let meals = []; // 点餐记录
-        // Use relative URL for Cloudflare Tunnel compatibility
+        let originalVendors = [];
+        let currentSortOrder = 'default';
+        let meals = [];
         const API_URL = window.location.origin + '/api';
 
-        function loadData() {
-            // 检查今天是否是北京时间星期四，并自动设定K记的权重
-            checkAndSetKJiWeight();
+        function escapeHtml(value) {
+            return String(value || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
 
-            // 加载商家数据
+        function getMealDisplayParts(meal) {
+            const note = (meal.order || '').trim();
+            return {
+                main: meal.vendor_name || '未命名商家',
+                note: note
+            };
+        }
+
+        function getMealDisplayHtml(meal) {
+            const parts = getMealDisplayParts(meal);
+            return '<div class="meal-main">' + escapeHtml(parts.main) + '</div>' +
+                (parts.note ? '<div class="meal-note">' + escapeHtml(parts.note) + '</div>' : '');
+        }
+
+        function renderMealVendorOptions(selectedValue) {
+            const currentValue = selectedValue == null ? '' : String(selectedValue);
+            const options = ['<option value="">请选择商家</option>']
+                .concat(originalVendors.map(function(vendor) {
+                    const value = String(vendor.id);
+                    const selected = value === currentValue ? ' selected' : '';
+                    return '<option value="' + value + '"' + selected + '>' + escapeHtml(vendor.vendor) + '</option>';
+                }));
+            return options.join('');
+        }
+
+        function renderMealVendorSelects() {
+            const addSelect = document.getElementById('mealVendor');
+            if (addSelect) {
+                const selectedValue = addSelect.value || '';
+                addSelect.innerHTML = renderMealVendorOptions(selectedValue);
+                if (selectedValue) {
+                    addSelect.value = selectedValue;
+                }
+            }
+
+            meals.forEach(function(meal) {
+                const select = document.getElementById('meal-vendor-input-' + meal.id);
+                if (!select) {
+                    return;
+                }
+                const value = meal.vendor_id != null ? String(meal.vendor_id) : '';
+                select.innerHTML = renderMealVendorOptions(value);
+                select.value = value;
+            });
+
+            updateAddMealPlaceholder();
+        }
+
+        function updateAddMealPlaceholder() {
+            const textarea = document.getElementById('mealOrder');
+            if (textarea) {
+                textarea.placeholder = '可选：套餐/备注';
+            }
+        }
+
+        function updateMealEditorPlaceholder(mealId) {
+            const textarea = document.getElementById('meal-order-input-' + mealId);
+            if (textarea) {
+                textarea.placeholder = '可选：套餐/备注';
+            }
+        }
+
+        function normalizeMealInput(dateValue, vendorValue, orderValue, priceValue, rateValue) {
+            const date = dateValue.replace(/-/g, '').slice(2);
+            const order = orderValue.trim();
+            const price = parseFloat(priceValue);
+            const rate = parseFloat(rateValue);
+
+            if (!dateValue) {
+                return { error: '请选择日期！' };
+            }
+
+            if (!vendorValue) {
+                return { error: '请选择商家！' };
+            }
+
+            if (isNaN(price) || price < 0) {
+                return { error: '请输入有效的价格！' };
+            }
+
+            if (isNaN(rate) || rate < 0.5 || rate > 5 || Math.abs(rate * 2 - Math.round(rate * 2)) > 1e-6) {
+                return { error: '请输入0.5-5之间、0.5步长的评价！' };
+            }
+
+            return {
+                payload: {
+                    date: date,
+                    vendor_id: parseInt(vendorValue, 10),
+                    order: order,
+                    price: price,
+                    rate: Math.round(rate * 2) / 2
+                }
+            };
+        }
+
+        function loadData() {
             fetch(API_URL + '/vendors')
                 .then(response => response.json())
                 .then(data => {
-                    originalVendors = data; // 保存原始顺序
+                    originalVendors = data;
                     vendors = data;
+                    checkAndSetKJiWeight();
 
-                    // 从localStorage恢复排序方式
                     const savedSortOrder = localStorage.getItem('sortOrder');
                     if (savedSortOrder) {
                         currentSortOrder = savedSortOrder;
@@ -458,13 +545,13 @@
                     }
 
                     renderVendorList();
+                    renderMealVendorSelects();
                 })
                 .catch(error => {
                     console.error('Error loading data:', error);
                     alert('加载数据失败，请确保服务器正在运行！');
                 });
 
-            // 加载点餐记录数据
             fetch(API_URL + '/meals')
                 .then(response => response.json())
                 .then(data => {
@@ -477,21 +564,22 @@
                 });
         }
 
-        // 检查今天是否是北京时间星期四，并自动设定K记的权重
         function checkAndSetKJiWeight() {
-            // 获取北京时间（UTC+8）
+            const kji = originalVendors.find(function(vendor) {
+                return vendor.vendor === 'K记';
+            });
+
+            if (!kji) {
+                return;
+            }
+
             const now = new Date();
             const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
             const beijingTime = new Date(utc + (3600000 * 8));
-
-            // 获取星期几（0=星期日, 1=星期一, ..., 4=星期四）
             const dayOfWeek = beijingTime.getDay();
-
-            // 根据是否是星期四设定权重
             const weight = (dayOfWeek === 4) ? 3000 : 100;
 
-            // 发送请求更新K记的权重
-            fetch(API_URL + '/vendors/0', {
+            fetch(API_URL + '/vendors/' + kji.id, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -502,9 +590,13 @@
             .then(data => {
                 if (data.error) {
                     console.log('自动设定K记权重失败:', data.error);
-                } else {
-                    console.log('已自动设定K记权重为:', weight, '(今天是' + (dayOfWeek === 4 ? '星期四' : '非星期四') + ')');
+                    return;
                 }
+                originalVendors = data.vendors;
+                applySortOrder();
+                renderVendorList();
+                renderMealVendorSelects();
+                console.log('已自动设定K记权重为:', weight, '(今天是' + (dayOfWeek === 4 ? '星期四' : '非星期四') + ')');
             })
             .catch(error => {
                 console.error('Error setting K记 weight:', error);
@@ -514,9 +606,8 @@
         function addVendor() {
             const nameInput = document.getElementById('vendorName');
             const weightInput = document.getElementById('vendorWeight');
-
             const name = nameInput.value.trim();
-            const weight = parseInt(weightInput.value);
+            const weight = parseInt(weightInput.value, 10);
 
             if (!name) {
                 alert('请输入商家名称！');
@@ -544,6 +635,7 @@
                     vendors = data.vendors;
                     applySortOrder();
                     renderVendorList();
+                    renderMealVendorSelects();
                     nameInput.value = '';
                     weightInput.value = '100';
                     nameInput.focus();
@@ -555,9 +647,18 @@
             });
         }
 
-        function deleteVendor(index) {
-            if (confirm('确定要删除 "' + vendors[index].vendor + '" 吗？')) {
-                fetch(API_URL + '/vendors/' + index, {
+        function deleteVendor(vendorId) {
+            const vendor = vendors.find(function(item) {
+                return item.id === vendorId;
+            });
+
+            if (!vendor) {
+                alert('未找到商家');
+                return;
+            }
+
+            if (confirm('确定要删除 "' + vendor.vendor + '" 吗？')) {
+                fetch(API_URL + '/vendors/' + vendorId, {
                     method: 'DELETE'
                 })
                 .then(response => response.json())
@@ -569,6 +670,7 @@
                         vendors = data.vendors;
                         applySortOrder();
                         renderVendorList();
+                        renderMealVendorSelects();
                     }
                 })
                 .catch(error => {
@@ -588,59 +690,65 @@
                 return;
             }
 
-            // 计算权重总和
             const totalWeight = vendors.reduce(function(sum, vendor) {
                 return sum + vendor.weight;
             }, 0);
 
-            // 更新商家数量和权重总和显示
             totalWeightElement.textContent = '(商家数量: ' + vendors.length + ', 总权重: ' + totalWeight + ')';
 
-            listContainer.innerHTML = vendors.map(function(vendor, index) {
+            listContainer.innerHTML = vendors.map(function(vendor) {
+                const id = vendor.id;
                 const zeroClass = vendor.weight === 0 ? ' zero-weight' : '';
-                return '<div class="vendor-item' + zeroClass + '" id="vendor-' + index + '">' +
+                return '<div class="vendor-item' + zeroClass + '" id="vendor-' + id + '">' +
                     '<div class="vendor-info">' +
-                    '<span class="vendor-name" id="name-display-' + index + '">' + vendor.vendor + '</span>' +
-                    '<input type="text" class="name-edit-input" id="name-input-' + index + '" value="' + vendor.vendor + '" style="display: none;" />' +
-                    '<span class="vendor-weight" id="weight-display-' + index + '">权重: ' + vendor.weight + '</span>' +
-                    '<input type="number" class="weight-edit-input" id="weight-input-' + index + '" value="' + vendor.weight + '" min="0" style="display: none;" />' +
+                    '<span class="vendor-name" id="name-display-' + id + '">' + escapeHtml(vendor.vendor) + '</span>' +
+                    '<input type="text" class="name-edit-input" id="name-input-' + id + '" value="' + escapeHtml(vendor.vendor) + '" style="display: none;" />' +
+                    '<span class="vendor-weight" id="weight-display-' + id + '">权重: ' + vendor.weight + '</span>' +
+                    '<input type="number" class="weight-edit-input" id="weight-input-' + id + '" value="' + vendor.weight + '" min="0" style="display: none;" />' +
                     '</div>' +
                     '<div class="vendor-actions">' +
-                    '<button class="edit-btn" id="edit-btn-' + index + '" onclick="editVendor(' + index + ')">编辑</button>' +
-                    '<button class="save-btn" id="save-btn-' + index + '" onclick="saveVendor(' + index + ')" style="display: none;">保存</button>' +
-                    '<button class="cancel-btn" id="cancel-btn-' + index + '" onclick="cancelEdit(' + index + ')" style="display: none;">取消</button>' +
-                    '<button class="delete-btn" onclick="deleteVendor(' + index + ')">删除</button>' +
+                    '<button class="edit-btn" id="edit-btn-' + id + '" onclick="editVendor(' + id + ')">编辑</button>' +
+                    '<button class="save-btn" id="save-btn-' + id + '" onclick="saveVendor(' + id + ')" style="display: none;">保存</button>' +
+                    '<button class="cancel-btn" id="cancel-btn-' + id + '" onclick="cancelEdit(' + id + ')" style="display: none;">取消</button>' +
+                    '<button class="delete-btn" onclick="deleteVendor(' + id + ')">删除</button>' +
                     '</div>' +
                     '</div>';
             }).join('');
         }
 
-        function editVendor(index) {
-            document.getElementById('name-display-' + index).style.display = 'none';
-            document.getElementById('name-input-' + index).style.display = 'inline-block';
-            document.getElementById('weight-display-' + index).style.display = 'none';
-            document.getElementById('weight-input-' + index).style.display = 'inline-block';
-            document.getElementById('edit-btn-' + index).style.display = 'none';
-            document.getElementById('save-btn-' + index).style.display = 'inline-block';
-            document.getElementById('cancel-btn-' + index).style.display = 'inline-block';
-            document.getElementById('name-input-' + index).focus();
+        function editVendor(vendorId) {
+            document.getElementById('name-display-' + vendorId).style.display = 'none';
+            document.getElementById('name-input-' + vendorId).style.display = 'inline-block';
+            document.getElementById('weight-display-' + vendorId).style.display = 'none';
+            document.getElementById('weight-input-' + vendorId).style.display = 'inline-block';
+            document.getElementById('edit-btn-' + vendorId).style.display = 'none';
+            document.getElementById('save-btn-' + vendorId).style.display = 'inline-block';
+            document.getElementById('cancel-btn-' + vendorId).style.display = 'inline-block';
+            document.getElementById('name-input-' + vendorId).focus();
         }
 
-        function cancelEdit(index) {
-            document.getElementById('name-display-' + index).style.display = 'inline-block';
-            document.getElementById('name-input-' + index).style.display = 'none';
-            document.getElementById('weight-display-' + index).style.display = 'inline-block';
-            document.getElementById('weight-input-' + index).style.display = 'none';
-            document.getElementById('edit-btn-' + index).style.display = 'inline-block';
-            document.getElementById('save-btn-' + index).style.display = 'none';
-            document.getElementById('cancel-btn-' + index).style.display = 'none';
-            document.getElementById('name-input-' + index).value = vendors[index].vendor;
-            document.getElementById('weight-input-' + index).value = vendors[index].weight;
+        function cancelEdit(vendorId) {
+            const vendor = vendors.find(function(item) {
+                return item.id === vendorId;
+            });
+            if (!vendor) {
+                return;
+            }
+
+            document.getElementById('name-display-' + vendorId).style.display = 'inline-block';
+            document.getElementById('name-input-' + vendorId).style.display = 'none';
+            document.getElementById('weight-display-' + vendorId).style.display = 'inline-block';
+            document.getElementById('weight-input-' + vendorId).style.display = 'none';
+            document.getElementById('edit-btn-' + vendorId).style.display = 'inline-block';
+            document.getElementById('save-btn-' + vendorId).style.display = 'none';
+            document.getElementById('cancel-btn-' + vendorId).style.display = 'none';
+            document.getElementById('name-input-' + vendorId).value = vendor.vendor;
+            document.getElementById('weight-input-' + vendorId).value = vendor.weight;
         }
 
-        function saveVendor(index) {
-            const newName = document.getElementById('name-input-' + index).value.trim();
-            const newWeight = parseInt(document.getElementById('weight-input-' + index).value);
+        function saveVendor(vendorId) {
+            const newName = document.getElementById('name-input-' + vendorId).value.trim();
+            const newWeight = parseInt(document.getElementById('weight-input-' + vendorId).value, 10);
 
             if (!newName) {
                 alert('请输入商家名称！');
@@ -652,7 +760,7 @@
                 return;
             }
 
-            fetch(API_URL + '/vendors/' + index, {
+            fetch(API_URL + '/vendors/' + vendorId, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
@@ -668,6 +776,7 @@
                     vendors = data.vendors;
                     applySortOrder();
                     renderVendorList();
+                    renderMealVendorSelects();
                 }
             })
             .catch(error => {
@@ -679,25 +788,19 @@
         function changeSortOrder() {
             const sortSelect = document.getElementById('sortSelect');
             currentSortOrder = sortSelect.value;
-
-            // 保存排序方式到localStorage
             localStorage.setItem('sortOrder', currentSortOrder);
-
             applySortOrder();
             renderVendorList();
         }
 
         function applySortOrder() {
             if (currentSortOrder === 'default') {
-                // 恢复原始顺序
                 vendors = [...originalVendors];
             } else if (currentSortOrder === 'name') {
-                // 按名称排序（中文拼音排序）
                 vendors = [...originalVendors].sort(function(a, b) {
                     return a.vendor.localeCompare(b.vendor, 'zh-CN');
                 });
             } else if (currentSortOrder === 'weight') {
-                // 按权重降序排序
                 vendors = [...originalVendors].sort(function(a, b) {
                     return b.weight - a.weight;
                 });
@@ -734,7 +837,6 @@
             resultDiv.textContent = '🎉 ' + vendors[vendors.length - 1].vendor;
         }
 
-        // 点餐记录相关函数
         function buildStars(rate) {
             const value = Number(rate) || 0;
             const fullStars = Math.floor(value);
@@ -744,35 +846,23 @@
 
         async function addMeal() {
             const dateInput = document.getElementById('mealDate');
+            const vendorInput = document.getElementById('mealVendor');
             const orderInput = document.getElementById('mealOrder');
             const priceInput = document.getElementById('mealPrice');
             const rateInput = document.getElementById('mealRate');
 
-            const date = dateInput.value.replace(/-/g, '').slice(2); // 转换为YYMMDD格式
-            const order = orderInput.value.trim();
-            const price = parseFloat(priceInput.value);
-            const rate = parseFloat(rateInput.value);
+            const normalized = normalizeMealInput(
+                dateInput.value,
+                vendorInput.value,
+                orderInput.value,
+                priceInput.value,
+                rateInput.value
+            );
 
-            if (!dateInput.value) {
-                alert('请选择日期！');
+            if (normalized.error) {
+                alert(normalized.error);
                 return;
             }
-
-            if (!order) {
-                alert('请输入点餐内容！');
-                return;
-            }
-
-            if (isNaN(price) || price < 0) {
-                alert('请输入有效的价格！');
-                return;
-            }
-
-            if (isNaN(rate) || rate < 0.5 || rate > 5 || Math.abs(rate * 2 - Math.round(rate * 2)) > 1e-6) {
-                alert('请输入0.5-5之间、0.5步长的评价！');
-                return;
-            }
-            const normalizedRate = Math.round(rate * 2) / 2;
 
             try {
                 const response = await fetch(API_URL + '/meals', {
@@ -780,7 +870,7 @@
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ date: date, order: order, price: price, rate: normalizedRate })
+                    body: JSON.stringify(normalized.payload)
                 });
                 const data = await response.json();
                 if (!response.ok || data.error) {
@@ -791,10 +881,12 @@
                 meals = data.meals;
                 renderMealList();
                 dateInput.value = '';
+                vendorInput.value = '';
                 orderInput.value = '';
                 priceInput.value = '';
                 rateInput.value = '3';
-                orderInput.focus();
+                updateAddMealPlaceholder();
+                vendorInput.focus();
             } catch (error) {
                 console.error('Error adding meal:', error);
                 alert('添加失败，请确保服务器正在运行！');
@@ -809,112 +901,110 @@
                 return;
             }
 
-            // 创建索引数组并按日期倒序排序（最新的在前面）
-            const sortedIndices = meals.map(function(meal, idx) {
-                return { meal: meal, originalIndex: idx };
-            }).sort(function(a, b) {
-                return b.meal.date.localeCompare(a.meal.date);
+            const sortedMeals = [...meals].sort(function(a, b) {
+                if (a.date === b.date) {
+                    return b.id - a.id;
+                }
+                return b.date.localeCompare(a.date);
             });
 
-            listContainer.innerHTML = sortedIndices.map(function(item) {
-                const meal = item.meal;
-                const index = item.originalIndex;
+            listContainer.innerHTML = sortedMeals.map(function(meal) {
+                const id = meal.id;
                 const stars = buildStars(meal.rate);
                 const rateText = (Math.round(Number(meal.rate || 0) * 2) / 2).toString().replace(/\.0$/, '');
                 const displayDate = '20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6);
+                const vendorValue = meal.vendor_id != null ? String(meal.vendor_id) : '';
 
-                return '<div class="meal-item" id="meal-' + index + '">' +
-                    '<span class="meal-date" id="meal-date-display-' + index + '">' + displayDate + '</span>' +
-                    '<input type="date" class="date-edit-input" id="meal-date-input-' + index + '" value="20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6) + '" style="display: none;" />' +
-
-                    '<span class="meal-order" id="meal-order-display-' + index + '">' + meal.order + '</span>' +
-                    '<input type="text" class="order-edit-input" id="meal-order-input-' + index + '" value="' + meal.order + '" style="display: none;" />' +
-
-                    '<span class="meal-price" id="meal-price-display-' + index + '">¥' + meal.price.toFixed(2) + '</span>' +
-                    '<input type="number" class="price-edit-input" id="meal-price-input-' + index + '" value="' + meal.price + '" step="0.01" min="0" style="display: none;" />' +
-
-                    '<span class="meal-rate" id="meal-rate-display-' + index + '" title="评分: ' + rateText + '">' + stars + '</span>' +
-                    '<input type="number" class="rate-edit-input" id="meal-rate-input-' + index + '" value="' + meal.rate + '" min="0.5" max="5" step="0.5" style="display: none;" />' +
-
+                return '<div class="meal-item" id="meal-' + id + '">' +
+                    '<span class="meal-date" id="meal-date-display-' + id + '">' + displayDate + '</span>' +
+                    '<input type="date" class="date-edit-input" id="meal-date-input-' + id + '" value="20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6) + '" style="display: none;" />' +
+                    '<div class="meal-order" id="meal-order-display-' + id + '">' + getMealDisplayHtml(meal) + '</div>' +
+                    '<div class="meal-order-editor" id="meal-order-editor-' + id + '">' +
+                    '<select class="meal-vendor-select" id="meal-vendor-input-' + id + '">' + renderMealVendorOptions(vendorValue) + '</select>' +
+                    '<textarea class="meal-note-input" id="meal-order-input-' + id + '">' + escapeHtml(meal.order || '') + '</textarea>' +
+                    '<div class="meal-other-hint" id="meal-other-hint-' + id + '"></div>' +
+                    '</div>' +
+                    '<span class="meal-price" id="meal-price-display-' + id + '">¥' + Number(meal.price).toFixed(2) + '</span>' +
+                    '<input type="number" class="price-edit-input" id="meal-price-input-' + id + '" value="' + meal.price + '" step="0.01" min="0" style="display: none;" />' +
+                    '<span class="meal-rate" id="meal-rate-display-' + id + '" title="评分: ' + rateText + '">' + stars + '</span>' +
+                    '<input type="number" class="rate-edit-input" id="meal-rate-input-' + id + '" value="' + meal.rate + '" min="0.5" max="5" step="0.5" style="display: none;" />' +
                     '<div class="meal-actions">' +
-                    '<button class="edit-btn" id="meal-edit-btn-' + index + '" onclick="editMeal(' + index + ')">编辑</button>' +
-                    '<button class="save-btn" id="meal-save-btn-' + index + '" onclick="saveMeal(' + index + ')" style="display: none;">保存</button>' +
-                    '<button class="cancel-btn" id="meal-cancel-btn-' + index + '" onclick="cancelEditMeal(' + index + ')" style="display: none;">取消</button>' +
-                    '<button class="delete-btn" onclick="deleteMeal(' + index + ')">删除</button>' +
+                    '<button class="edit-btn" id="meal-edit-btn-' + id + '" onclick="editMeal(' + id + ')">编辑</button>' +
+                    '<button class="save-btn" id="meal-save-btn-' + id + '" onclick="saveMeal(' + id + ')" style="display: none;">保存</button>' +
+                    '<button class="cancel-btn" id="meal-cancel-btn-' + id + '" onclick="cancelEditMeal(' + id + ')" style="display: none;">取消</button>' +
+                    '<button class="delete-btn" onclick="deleteMeal(' + id + ')">删除</button>' +
                     '</div>' +
                     '</div>';
             }).join('');
+
+            renderMealVendorSelects();
         }
 
-        function editMeal(index) {
-            document.getElementById('meal-date-display-' + index).style.display = 'none';
-            document.getElementById('meal-date-input-' + index).style.display = 'inline-block';
-            document.getElementById('meal-order-display-' + index).style.display = 'none';
-            document.getElementById('meal-order-input-' + index).style.display = 'inline-block';
-            document.getElementById('meal-price-display-' + index).style.display = 'none';
-            document.getElementById('meal-price-input-' + index).style.display = 'inline-block';
-            document.getElementById('meal-rate-display-' + index).style.display = 'none';
-            document.getElementById('meal-rate-input-' + index).style.display = 'inline-block';
-            document.getElementById('meal-edit-btn-' + index).style.display = 'none';
-            document.getElementById('meal-save-btn-' + index).style.display = 'inline-block';
-            document.getElementById('meal-cancel-btn-' + index).style.display = 'inline-block';
+        function editMeal(mealId) {
+            document.getElementById('meal-date-display-' + mealId).style.display = 'none';
+            document.getElementById('meal-date-input-' + mealId).style.display = 'inline-block';
+            document.getElementById('meal-order-display-' + mealId).style.display = 'none';
+            document.getElementById('meal-order-editor-' + mealId).classList.add('active');
+            document.getElementById('meal-price-display-' + mealId).style.display = 'none';
+            document.getElementById('meal-price-input-' + mealId).style.display = 'inline-block';
+            document.getElementById('meal-rate-display-' + mealId).style.display = 'none';
+            document.getElementById('meal-rate-input-' + mealId).style.display = 'inline-block';
+            document.getElementById('meal-edit-btn-' + mealId).style.display = 'none';
+            document.getElementById('meal-save-btn-' + mealId).style.display = 'inline-block';
+            document.getElementById('meal-cancel-btn-' + mealId).style.display = 'inline-block';
+            updateMealEditorPlaceholder(mealId);
         }
 
-        function cancelEditMeal(index) {
-            document.getElementById('meal-date-display-' + index).style.display = 'inline-block';
-            document.getElementById('meal-date-input-' + index).style.display = 'none';
-            document.getElementById('meal-order-display-' + index).style.display = 'inline-block';
-            document.getElementById('meal-order-input-' + index).style.display = 'none';
-            document.getElementById('meal-price-display-' + index).style.display = 'inline-block';
-            document.getElementById('meal-price-input-' + index).style.display = 'none';
-            document.getElementById('meal-rate-display-' + index).style.display = 'inline-block';
-            document.getElementById('meal-rate-input-' + index).style.display = 'none';
-            document.getElementById('meal-edit-btn-' + index).style.display = 'inline-block';
-            document.getElementById('meal-save-btn-' + index).style.display = 'none';
-            document.getElementById('meal-cancel-btn-' + index).style.display = 'none';
+        function cancelEditMeal(mealId) {
+            const meal = meals.find(function(item) {
+                return item.id === mealId;
+            });
+            if (!meal) {
+                return;
+            }
 
-            const meal = meals[index];
+            document.getElementById('meal-date-display-' + mealId).style.display = 'inline-block';
+            document.getElementById('meal-date-input-' + mealId).style.display = 'none';
+            document.getElementById('meal-order-display-' + mealId).style.display = 'block';
+            document.getElementById('meal-order-editor-' + mealId).classList.remove('active');
+            document.getElementById('meal-price-display-' + mealId).style.display = 'inline-block';
+            document.getElementById('meal-price-input-' + mealId).style.display = 'none';
+            document.getElementById('meal-rate-display-' + mealId).style.display = 'inline-block';
+            document.getElementById('meal-rate-input-' + mealId).style.display = 'none';
+            document.getElementById('meal-edit-btn-' + mealId).style.display = 'inline-block';
+            document.getElementById('meal-save-btn-' + mealId).style.display = 'none';
+            document.getElementById('meal-cancel-btn-' + mealId).style.display = 'none';
+
             const displayDate = '20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6);
-            document.getElementById('meal-date-input-' + index).value = displayDate;
-            document.getElementById('meal-order-input-' + index).value = meal.order;
-            document.getElementById('meal-price-input-' + index).value = meal.price;
-            document.getElementById('meal-rate-input-' + index).value = meal.rate;
+            document.getElementById('meal-date-input-' + mealId).value = displayDate;
+            document.getElementById('meal-vendor-input-' + mealId).value = meal.vendor_id != null ? String(meal.vendor_id) : '';
+            document.getElementById('meal-order-input-' + mealId).value = meal.order || '';
+            document.getElementById('meal-price-input-' + mealId).value = meal.price;
+            document.getElementById('meal-rate-input-' + mealId).value = meal.rate;
+            updateMealEditorPlaceholder(mealId);
         }
 
-        async function saveMeal(index) {
-            const newDate = document.getElementById('meal-date-input-' + index).value.replace(/-/g, '').slice(2);
-            const newOrder = document.getElementById('meal-order-input-' + index).value.trim();
-            const newPrice = parseFloat(document.getElementById('meal-price-input-' + index).value);
-            const newRate = parseFloat(document.getElementById('meal-rate-input-' + index).value);
+        async function saveMeal(mealId) {
+            const normalized = normalizeMealInput(
+                document.getElementById('meal-date-input-' + mealId).value,
+                document.getElementById('meal-vendor-input-' + mealId).value,
+                document.getElementById('meal-order-input-' + mealId).value,
+                document.getElementById('meal-price-input-' + mealId).value,
+                document.getElementById('meal-rate-input-' + mealId).value
+            );
 
-            if (!newDate) {
-                alert('请选择日期！');
+            if (normalized.error) {
+                alert(normalized.error);
                 return;
             }
-
-            if (!newOrder) {
-                alert('请输入点餐内容！');
-                return;
-            }
-
-            if (isNaN(newPrice) || newPrice < 0) {
-                alert('请输入有效的价格！');
-                return;
-            }
-
-            if (isNaN(newRate) || newRate < 0.5 || newRate > 5 || Math.abs(newRate * 2 - Math.round(newRate * 2)) > 1e-6) {
-                alert('请输入0.5-5之间、0.5步长的评价！');
-                return;
-            }
-            const normalizedRate = Math.round(newRate * 2) / 2;
 
             try {
-                const response = await fetch(API_URL + '/meals/' + index, {
+                const response = await fetch(API_URL + '/meals/' + mealId, {
                     method: 'PUT',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ date: newDate, order: newOrder, price: newPrice, rate: normalizedRate })
+                    body: JSON.stringify(normalized.payload)
                 });
 
                 const data = await response.json();
@@ -931,9 +1021,9 @@
             }
         }
 
-        function deleteMeal(index) {
+        function deleteMeal(mealId) {
             if (confirm('确定要删除这条点餐记录吗？')) {
-                fetch(API_URL + '/meals/' + index, {
+                fetch(API_URL + '/meals/' + mealId, {
                     method: 'DELETE'
                 })
                 .then(response => response.json())
@@ -952,11 +1042,9 @@
             }
         }
 
-
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
 
-            // 设置默认日期为今天
             const today = new Date().toISOString().split('T')[0];
             document.getElementById('mealDate').value = today;
 
@@ -972,8 +1060,13 @@
                 }
             });
 
+            document.getElementById('mealVendor').addEventListener('change', function() {
+                updateAddMealPlaceholder();
+            });
+
             document.getElementById('mealOrder').addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
                     addMeal();
                 }
             });

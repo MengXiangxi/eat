@@ -4,15 +4,16 @@ services:
     ports:
       - "5000:5000"
     volumes:
-      - ./db.csv:/app/db.csv
-      - ./db_meal.csv:/app/db_meal.csv
+      - ./eat.db:/app/eat.db
+      - ./img:/app/img
     restart: unless-stopped
     environment:
       - FLASK_ENV=production
 
-  cloudflared:
-    image: cloudflare/cloudflared:latest
-    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:?set tunnel token in env}
-    depends_on:
-      - app
-    restart: unless-stopped
+        #  cloudflared:
+        #    image: cloudflare/cloudflared:latest
+        #    network_mode: host
+        #    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN:?set tunnel token in env}
+        #    depends_on:
+        #      - app
+        #    restart: unless-stopped

@@ -2,127 +2,253 @@
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 import os
-import csv
+import sqlite3
 
 app = Flask(__name__)
 CORS(app)
 
-# Absolute paths so both public (5000) and manage (5001) services share the same storage
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-CSV_VENDOR_FILE = os.path.join(BASE_DIR, 'db.csv')
-CSV_MEAL_FILE = os.path.join(BASE_DIR, 'db_meal.csv')
+DB_FILE = os.path.join(BASE_DIR, 'eat.db')
 IMG_DIR = os.path.join(BASE_DIR, 'img')
 
 
+def get_conn():
+    conn = sqlite3.connect(DB_FILE)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def ensure_meal_vendor_schema(conn):
+    columns = {
+        row['name']
+        for row in conn.execute('PRAGMA table_info(meals)').fetchall()
+    }
+    if 'vendor_id' in columns:
+        return
+
+    conn.execute('ALTER TABLE meals ADD COLUMN vendor_id INTEGER')
+
+    meal_vendor_names = [
+        row['order_text'].strip()
+        for row in conn.execute(
+            """
+            SELECT DISTINCT order_text
+            FROM meals
+            WHERE TRIM(order_text) != ''
+            """
+        ).fetchall()
+    ]
+
+    existing_vendor_names = {
+        row['vendor']
+        for row in conn.execute('SELECT vendor FROM vendors').fetchall()
+    }
+
+    for vendor_name in meal_vendor_names:
+        if vendor_name not in existing_vendor_names:
+            conn.execute(
+                'INSERT INTO vendors (vendor, weight) VALUES (?, ?)',
+                (vendor_name, 0),
+            )
+            existing_vendor_names.add(vendor_name)
+
+    conn.execute(
+        """
+        UPDATE meals
+        SET vendor_id = (
+            SELECT id FROM vendors WHERE vendor = TRIM(meals.order_text)
+        )
+        WHERE vendor_id IS NULL AND TRIM(order_text) != ''
+        """
+    )
+    conn.execute(
+        """
+        UPDATE meals
+        SET order_text = ''
+        WHERE vendor_id IS NOT NULL AND TRIM(order_text) != ''
+        """
+    )
+    conn.commit()
+
+
 def ensure_db():
-    """Create CSV files and folders if missing."""
-    os.makedirs(BASE_DIR, exist_ok=True)
     os.makedirs(IMG_DIR, exist_ok=True)
+    with get_conn() as conn:
+        conn.execute(
+            '''
+            CREATE TABLE IF NOT EXISTS vendors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vendor TEXT NOT NULL UNIQUE,
+                weight INTEGER NOT NULL DEFAULT 0 CHECK(weight >= 0)
+            )
+            '''
+        )
+        conn.execute(
+            '''
+            CREATE TABLE IF NOT EXISTS meals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                date TEXT NOT NULL,
+                order_text TEXT NOT NULL DEFAULT '',
+                price REAL NOT NULL DEFAULT 0 CHECK(price >= 0),
+                rate REAL NOT NULL DEFAULT 1 CHECK(rate >= 0.5 AND rate <= 5),
+                image TEXT NOT NULL DEFAULT ''
+            )
+            '''
+        )
+        ensure_meal_vendor_schema(conn)
+        conn.commit()
 
-    if not os.path.exists(CSV_VENDOR_FILE):
-        with open(CSV_VENDOR_FILE, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(['vendor', 'weight'])
 
-    if not os.path.exists(CSV_MEAL_FILE):
-        with open(CSV_MEAL_FILE, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(['date', 'order', 'price', 'rate', 'image'])
+def serialize_vendor(row):
+    return {
+        'id': row['id'],
+        'vendor': row['vendor'],
+        'weight': row['weight'],
+    }
+
+
+def serialize_meal(row):
+    return {
+        'id': row['id'],
+        'date': row['date'],
+        'vendor_id': row['vendor_id'],
+        'vendor_name': row['vendor_name'],
+        'order': row['order_text'] or '',
+        'price': row['price'],
+        'rate': row['rate'],
+        'image': row['image'],
+    }
 
 
 def read_vendors():
-    if not os.path.exists(CSV_VENDOR_FILE):
-        return []
-
-    vendors = []
-    with open(CSV_VENDOR_FILE, 'r', newline='', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for idx, row in enumerate(reader):
-            vendor_name = (row.get('vendor') or '').strip()
-            if not vendor_name:
-                continue
-            try:
-                weight = int(row.get('weight', 0))
-            except (TypeError, ValueError):
-                weight = 0
-            vendors.append({'id': idx, 'vendor': vendor_name, 'weight': weight})
-    return vendors
-
-
-def save_vendors(vendors):
-    with open(CSV_VENDOR_FILE, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=['vendor', 'weight'])
-        writer.writeheader()
-        for vendor in vendors:
-            writer.writerow({'vendor': vendor['vendor'], 'weight': int(vendor.get('weight', 0))})
+    with get_conn() as conn:
+        rows = conn.execute(
+            'SELECT id, vendor, weight FROM vendors ORDER BY id ASC'
+        ).fetchall()
+    return [serialize_vendor(row) for row in rows]
 
 
 def read_meals():
-    if not os.path.exists(CSV_MEAL_FILE):
-        return []
-
-    meals = []
-    with open(CSV_MEAL_FILE, 'r', newline='', encoding='utf-8') as f:
-        reader = csv.DictReader(f)
-        for idx, row in enumerate(reader):
-            try:
-                price = float(row.get('price', 0) or 0)
-            except (TypeError, ValueError):
-                price = 0.0
-            try:
-                rate = float(row.get('rate', 1) or 1)
-                rate = max(0.5, min(round(rate * 2) / 2, 5))
-            except (TypeError, ValueError):
-                rate = 1.0
-
-            meals.append({
-                'id': idx,
-                'date': (row.get('date') or '').strip(),
-                'order': (row.get('order') or row.get('order_text') or '').strip(),
-                'price': price,
-                'rate': rate,
-                'image': (row.get('image') or '').strip()
-            })
-
-    # Sort by date desc then original order desc (newest first)
-    meals = sorted(meals, key=lambda m: (m['date'], m['id']), reverse=True)
-    # Reassign sequential ids after sorting to keep API indexes stable
-    for idx, meal in enumerate(meals):
-        meal['id'] = idx
-    return meals
+    with get_conn() as conn:
+        rows = conn.execute(
+            '''
+            SELECT
+                m.id,
+                m.date,
+                m.vendor_id,
+                v.vendor AS vendor_name,
+                m.order_text,
+                m.price,
+                m.rate,
+                m.image
+            FROM meals AS m
+            LEFT JOIN vendors AS v ON v.id = m.vendor_id
+            ORDER BY m.date DESC, m.id DESC
+            '''
+        ).fetchall()
+    return [serialize_meal(row) for row in rows]
 
 
-def save_meals(meals):
-    with open(CSV_MEAL_FILE, 'w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=['date', 'order', 'price', 'rate', 'image'])
-        writer.writeheader()
-        for meal in meals:
-            writer.writerow({
-                'date': meal.get('date', '').strip(),
-                'order': meal.get('order', '').strip(),
-                'price': float(meal.get('price', 0) or 0),
-                'rate': round(float(meal.get('rate', 1) or 1) * 2) / 2,
-                'image': (meal.get('image') or '').strip()
-            })
+def get_vendor(vendor_id):
+    with get_conn() as conn:
+        row = conn.execute(
+            'SELECT id, vendor, weight FROM vendors WHERE id = ?',
+            (vendor_id,),
+        ).fetchone()
+    return row
 
 
-def get_vendor_by_index(index):
-    vendors = read_vendors()
-    if index < 0 or index >= len(vendors):
-        return None, vendors
-    return vendors[index], vendors
+def get_meal(meal_id):
+    with get_conn() as conn:
+        row = conn.execute(
+            '''
+            SELECT
+                m.id,
+                m.date,
+                m.vendor_id,
+                v.vendor AS vendor_name,
+                m.order_text,
+                m.price,
+                m.rate,
+                m.image
+            FROM meals AS m
+            LEFT JOIN vendors AS v ON v.id = m.vendor_id
+            WHERE m.id = ?
+            ''',
+            (meal_id,),
+        ).fetchone()
+    return row
 
 
-def get_meal_by_index(index):
-    meals = read_meals()
-    if index < 0 or index >= len(meals):
-        return None, meals
-    return meals[index], meals
+def parse_weight(value):
+    try:
+        weight = int(value)
+    except (TypeError, ValueError):
+        return None
+    return weight if weight >= 0 else None
+
+
+def parse_price(value):
+    try:
+        price = float(value)
+    except (TypeError, ValueError):
+        return None
+    return price if price >= 0 else None
+
+
+def parse_rate(value):
+    try:
+        rate = float(value)
+    except (TypeError, ValueError):
+        return None
+    if rate < 0.5 or rate > 5:
+        return None
+    if abs(rate * 2 - round(rate * 2)) > 1e-6:
+        return None
+    return round(rate * 2) / 2
+
+
+def parse_vendor_id(value):
+    if value in (None, ''):
+        return None
+    try:
+        vendor_id = int(value)
+    except (TypeError, ValueError):
+        return None
+    return vendor_id if vendor_id > 0 else None
+
+
+def validate_meal_payload(data, current=None):
+    date = (data.get('date') or '').strip() if 'date' in data else (current['date'] if current else '')
+    order = str(data.get('order') or '').strip() if 'order' in data else (current['order_text'] if current else '')
+    price = parse_price(data.get('price')) if 'price' in data else (current['price'] if current else None)
+    rate = parse_rate(data.get('rate')) if 'rate' in data else (current['rate'] if current else None)
+    image = str(data.get('image') or '').strip() if 'image' in data else (current['image'] if current else '')
+    vendor_id = parse_vendor_id(data.get('vendor_id')) if 'vendor_id' in data else (current['vendor_id'] if current else None)
+
+    if not date:
+        return None, '日期不能为空'
+    if price is None:
+        return None, '价格必须大于等于0'
+    if rate is None:
+        return None, '评价必须在0.5-5之间，且以0.5为步长'
+    if vendor_id is None:
+        return None, '必须选择商家'
+    if vendor_id is not None and get_vendor(vendor_id) is None:
+        return None, '无效的商家ID'
+
+    return {
+        'date': date,
+        'vendor_id': vendor_id,
+        'order_text': order,
+        'price': price,
+        'rate': rate,
+        'image': image,
+    }, None
 
 
 @app.route('/')
 def index():
-    """Serve the main HTML page"""
     return send_from_directory('.', 'eat.html')
 
 
@@ -133,70 +259,70 @@ def get_vendors():
 
 @app.route('/api/vendors', methods=['POST'])
 def add_vendor():
-    data = request.json
+    data = request.get_json(silent=True) or {}
     vendor_name = (data.get('vendor') or '').strip()
-    weight = data.get('weight', 100)
+    weight = parse_weight(data.get('weight', 100))
 
     if not vendor_name:
         return jsonify({'error': '商家名称不能为空'}), 400
+    if weight is None:
+        return jsonify({'error': '权重必须是大于等于0的整数'}), 400
 
     try:
-        weight_value = int(weight)
-    except (TypeError, ValueError):
-        return jsonify({'error': '权重必须是数字'}), 400
-
-    if weight_value < 0:
-        return jsonify({'error': '权重必须大于等于0'}), 400
-
-    vendors = read_vendors()
-    if any(v['vendor'] == vendor_name for v in vendors):
+        with get_conn() as conn:
+            conn.execute(
+                'INSERT INTO vendors (vendor, weight) VALUES (?, ?)',
+                (vendor_name, weight),
+            )
+            conn.commit()
+    except sqlite3.IntegrityError:
         return jsonify({'error': '该商家已存在'}), 400
 
-    vendors.append({'vendor': vendor_name, 'weight': weight_value})
-    save_vendors(vendors)
+    return jsonify({'success': True, 'vendors': read_vendors()})
+
+
+@app.route('/api/vendors/<int:vendor_id>', methods=['PUT'])
+def update_vendor(vendor_id):
+    data = request.get_json(silent=True) or {}
+    current = get_vendor(vendor_id)
+    if current is None:
+        return jsonify({'error': '无效的商家ID'}), 400
+
+    new_name = (data.get('vendor') or '').strip() or current['vendor']
+    new_weight = current['weight'] if data.get('weight') is None else parse_weight(data.get('weight'))
+
+    if not new_name:
+        return jsonify({'error': '商家名称不能为空'}), 400
+    if new_weight is None:
+        return jsonify({'error': '权重必须是大于等于0的整数'}), 400
+
+    try:
+        with get_conn() as conn:
+            conn.execute(
+                'UPDATE vendors SET vendor = ?, weight = ? WHERE id = ?',
+                (new_name, new_weight, vendor_id),
+            )
+            conn.commit()
+    except sqlite3.IntegrityError:
+        return jsonify({'error': '该商家名称已存在'}), 400
 
     return jsonify({'success': True, 'vendors': read_vendors()})
 
 
-@app.route('/api/vendors/<int:index>', methods=['PUT'])
-def update_vendor(index):
-    data = request.json
-    new_name = (data.get('vendor') or '').strip()
-    new_weight = data.get('weight')
+@app.route('/api/vendors/<int:vendor_id>', methods=['DELETE'])
+def delete_vendor(vendor_id):
+    if get_vendor(vendor_id) is None:
+        return jsonify({'error': '无效的商家ID'}), 400
 
-    vendor, vendors = get_vendor_by_index(index)
-    if vendor is None:
-        return jsonify({'error': '无效的索引'}), 400
-
-    if new_name:
-        if any(v['vendor'] == new_name and v is not vendor for v in vendors):
-            return jsonify({'error': '该商家名称已存在'}), 400
-
-    if new_weight is not None:
-        try:
-            new_weight_value = int(new_weight)
-        except (TypeError, ValueError):
-            return jsonify({'error': '权重必须是数字'}), 400
-        if new_weight_value < 0:
-            return jsonify({'error': '权重必须大于等于0'}), 400
-    else:
-        new_weight_value = vendor['weight']
-
-    vendor['vendor'] = new_name or vendor['vendor']
-    vendor['weight'] = new_weight_value
-    save_vendors(vendors)
-
-    return jsonify({'success': True, 'vendors': read_vendors()})
-
-
-@app.route('/api/vendors/<int:index>', methods=['DELETE'])
-def delete_vendor(index):
-    vendor, vendors = get_vendor_by_index(index)
-    if vendor is None:
-        return jsonify({'error': '无效的索引'}), 400
-
-    vendors.pop(index)
-    save_vendors(vendors)
+    with get_conn() as conn:
+        linked_meal = conn.execute(
+            'SELECT id FROM meals WHERE vendor_id = ? LIMIT 1',
+            (vendor_id,),
+        ).fetchone()
+        if linked_meal is not None:
+            return jsonify({'error': '该商家已被点餐记录引用，不能删除'}), 400
+        conn.execute('DELETE FROM vendors WHERE id = ?', (vendor_id,))
+        conn.commit()
 
     return jsonify({'success': True, 'vendors': read_vendors()})
 
@@ -208,111 +334,77 @@ def get_meals():
 
 @app.route('/api/meals', methods=['POST'])
 def add_meal():
-    data = request.json
-    date = (data.get('date') or '').strip()
-    order = (data.get('order') or '').strip()
-    price = data.get('price')
-    rate = data.get('rate')
-    image = '' if data.get('image') is None else str(data.get('image')).strip()
+    data = request.get_json(silent=True) or {}
+    payload, error = validate_meal_payload(data)
+    if error:
+        return jsonify({'error': error}), 400
 
-    if not date:
-        return jsonify({'error': '日期不能为空'}), 400
-
-    if not order:
-        return jsonify({'error': '点餐内容不能为空'}), 400
-
-    if price is None or price < 0:
-        return jsonify({'error': '价格必须大于等于0'}), 400
-
-    try:
-        rate_value = float(rate)
-    except (TypeError, ValueError):
-        return jsonify({'error': '评价必须是数字'}), 400
-
-    if rate_value < 0.5 or rate_value > 5 or abs(rate_value * 2 - round(rate_value * 2)) > 1e-6:
-        return jsonify({'error': '评价必须在0.5-5之间，且以0.5为步长'}), 400
-
-    rate_value = round(rate_value * 2) / 2
-
-    meals = read_meals()
-    meals.append({
-        'date': date,
-        'order': order,
-        'price': float(price),
-        'rate': rate_value,
-        'image': image
-    })
-    save_meals(meals)
+    with get_conn() as conn:
+        conn.execute(
+            'INSERT INTO meals (date, vendor_id, order_text, price, rate, image) VALUES (?, ?, ?, ?, ?, ?)',
+            (
+                payload['date'],
+                payload['vendor_id'],
+                payload['order_text'],
+                payload['price'],
+                payload['rate'],
+                payload['image'],
+            ),
+        )
+        conn.commit()
 
     return jsonify({'success': True, 'meals': read_meals()})
 
 
-@app.route('/api/meals/<int:index>', methods=['PUT'])
-def update_meal(index):
-    data = request.json
-    date = (data.get('date') or '').strip()
-    order = (data.get('order') or '').strip()
-    price = data.get('price')
-    rate = data.get('rate')
-    image = data.get('image')
+@app.route('/api/meals/<int:meal_id>', methods=['PUT'])
+def update_meal(meal_id):
+    data = request.get_json(silent=True) or {}
+    current = get_meal(meal_id)
+    if current is None:
+        return jsonify({'error': '无效的点餐记录ID'}), 400
 
-    meal, meals = get_meal_by_index(index)
-    if meal is None:
-        return jsonify({'error': '无效的索引'}), 400
+    payload, error = validate_meal_payload(data, current)
+    if error:
+        return jsonify({'error': error}), 400
 
-    if date:
-        meal['date'] = date
+    with get_conn() as conn:
+        conn.execute(
+            'UPDATE meals SET date = ?, vendor_id = ?, order_text = ?, price = ?, rate = ?, image = ? WHERE id = ?',
+            (
+                payload['date'],
+                payload['vendor_id'],
+                payload['order_text'],
+                payload['price'],
+                payload['rate'],
+                payload['image'],
+                meal_id,
+            ),
+        )
+        conn.commit()
 
-    if order:
-        meal['order'] = order
-
-    if price is not None:
-        if price < 0:
-            return jsonify({'error': '价格必须大于等于0'}), 400
-        meal['price'] = float(price)
-
-    if rate is not None:
-        try:
-            rate_value = float(rate)
-        except (TypeError, ValueError):
-            return jsonify({'error': '评价必须是数字'}), 400
-
-        if rate_value < 0.5 or rate_value > 5 or abs(rate_value * 2 - round(rate_value * 2)) > 1e-6:
-            return jsonify({'error': '评价必须在0.5-5之间，且以0.5为步长'}), 400
-        meal['rate'] = round(rate_value * 2) / 2
-
-    if image is not None:
-        meal['image'] = str(image).strip()
-
-    save_meals(meals)
     return jsonify({'success': True, 'meals': read_meals()})
 
 
-@app.route('/api/meals/<int:index>', methods=['DELETE'])
-def delete_meal(index):
-    meal, meals = get_meal_by_index(index)
-    if meal is None:
-        return jsonify({'error': '无效的索引'}), 400
+@app.route('/api/meals/<int:meal_id>', methods=['DELETE'])
+def delete_meal(meal_id):
+    if get_meal(meal_id) is None:
+        return jsonify({'error': '无效的点餐记录ID'}), 400
 
-    meals.pop(index)
-    save_meals(meals)
+    with get_conn() as conn:
+        conn.execute('DELETE FROM meals WHERE id = ?', (meal_id,))
+        conn.commit()
 
     return jsonify({'success': True, 'meals': read_meals()})
 
 
 @app.route('/img/<path:filename>')
 def serve_image(filename):
-    """Serve stored images"""
     return send_from_directory(IMG_DIR, filename)
 
 
-# Ensure CSV files exist even when imported by external WSGI runners
 ensure_db()
 
 if __name__ == '__main__':
-    print("Server running at http://localhost:5000")
-    print("Open http://localhost:5000 in your browser")
-    print("\nTo access via Cloudflare Tunnel:")
-    print("1. Install cloudflared: https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/installation/")
-    print("2. Run: cloudflared tunnel --url http://localhost:5000")
+    print('Server running at http://localhost:5000')
+    print('Open http://localhost:5000 in your browser')
     app.run(host='0.0.0.0', debug=True, port=5000)
