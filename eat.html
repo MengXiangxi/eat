@@ -140,19 +140,6 @@
             border-radius: 5px;
         }
 
-        .vendor-item.zero-weight {
-            opacity: 0.7;
-        }
-
-        .vendor-item.zero-weight .vendor-name,
-        .vendor-item.zero-weight .vendor-weight {
-            color: #999;
-        }
-
-        .vendor-item.zero-weight .vendor-weight {
-            background: #f1f3f5;
-        }
-
         .empty-message {
             text-align: center;
             color: #999;
@@ -313,7 +300,7 @@
                 .then(response => response.json())
                 .then(data => {
                     originalVendors = data;
-                    vendors = data;
+                    vendors = data.filter(function(v) { return v.weight > 0; });
                     checkAndSetKJiWeight();
 
                     const savedSortOrder = localStorage.getItem('sortOrder');
@@ -371,6 +358,7 @@
                     return;
                 }
                 originalVendors = data.vendors;
+                vendors = originalVendors.filter(function(v) { return v.weight > 0; });
                 applySortOrder();
                 renderVendorList();
                 console.log('已自动设定K记权重为:', weight, '(今天是' + (dayOfWeek === 4 ? '星期四' : '非星期四') + ')');
@@ -389,14 +377,15 @@
         }
 
         function applySortOrder() {
+            var filtered = originalVendors.filter(function(v) { return v.weight > 0; });
             if (currentSortOrder === 'default') {
-                vendors = [...originalVendors];
+                vendors = filtered;
             } else if (currentSortOrder === 'name') {
-                vendors = [...originalVendors].sort(function(a, b) {
+                vendors = [...filtered].sort(function(a, b) {
                     return a.vendor.localeCompare(b.vendor, 'zh-CN');
                 });
             } else if (currentSortOrder === 'weight') {
-                vendors = [...originalVendors].sort(function(a, b) {
+                vendors = [...filtered].sort(function(a, b) {
                     return b.weight - a.weight;
                 });
             }
@@ -419,8 +408,7 @@
             totalWeightElement.textContent = '(商家数量: ' + vendors.length + ', 总权重: ' + totalWeight + ')';
 
             listContainer.innerHTML = vendors.map(function(vendor) {
-                const zeroClass = vendor.weight === 0 ? ' zero-weight' : '';
-                return '<div class="vendor-item' + zeroClass + '">' +
+                return '<div class="vendor-item">' +
                     '<div class="vendor-info">' +
                     '<span class="vendor-name">' + vendor.vendor + '</span>' +
                     '<span class="vendor-weight">权重: ' + vendor.weight + '</span>' +
