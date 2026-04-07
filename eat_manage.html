@@ -332,7 +332,7 @@
         .date-edit-input,
         .price-edit-input,
         .rate-edit-input,
-        .meal-vendor-select,
+        .meal-vendor-input,
         .meal-note-input {
             width: 100%;
             font-size: 14px;
@@ -352,7 +352,7 @@
             display: block;
         }
 
-        .meal-order-editor .meal-vendor-select {
+        .meal-order-editor .meal-vendor-input {
             margin-bottom: 8px;
         }
 
@@ -404,7 +404,8 @@
             <h2>🍜 添加点餐记录</h2>
             <div class="add-form">
                 <input type="date" id="mealDate" />
-                <select id="mealVendor"></select>
+                <input type="text" id="mealVendor" list="vendorDatalist" placeholder="输入或选择商家" />
+                <datalist id="vendorDatalist"></datalist>
                 <textarea id="mealOrder" placeholder="可选：套餐/备注"></textarea>
                 <input type="number" id="mealPrice" placeholder="价格" step="0.01" min="0" />
                 <input type="number" id="mealRate" placeholder="评价(0.5-5，0.5步长)" min="0.5" max="5" step="0.5" value="3" />
@@ -448,38 +449,34 @@
                 (parts.note ? '<div class="meal-note">' + escapeHtml(parts.note) + '</div>' : '');
         }
 
-        function renderMealVendorOptions(selectedValue) {
-            const currentValue = selectedValue == null ? '' : String(selectedValue);
-            const options = ['<option value="">请选择商家</option>']
-                .concat(originalVendors.map(function(vendor) {
-                    const value = String(vendor.id);
-                    const selected = value === currentValue ? ' selected' : '';
-                    return '<option value="' + value + '"' + selected + '>' + escapeHtml(vendor.vendor) + '</option>';
-                }));
-            return options.join('');
-        }
-
-        function renderMealVendorSelects() {
-            const addSelect = document.getElementById('mealVendor');
-            if (addSelect) {
-                const selectedValue = addSelect.value || '';
-                addSelect.innerHTML = renderMealVendorOptions(selectedValue);
-                if (selectedValue) {
-                    addSelect.value = selectedValue;
-                }
+        function renderMealVendorDatalist() {
+            const datalist = document.getElementById('vendorDatalist');
+            if (datalist) {
+                datalist.innerHTML = originalVendors.map(function(vendor) {
+                    return '<option value="' + escapeHtml(vendor.vendor) + '" data-id="' + vendor.id + '"></option>';
+                }).join('');
             }
 
             meals.forEach(function(meal) {
-                const select = document.getElementById('meal-vendor-input-' + meal.id);
-                if (!select) {
-                    return;
+                const datalist = document.getElementById('vendor-datalist-' + meal.id);
+                if (datalist) {
+                    datalist.innerHTML = originalVendors.map(function(vendor) {
+                        return '<option value="' + escapeHtml(vendor.vendor) + '" data-id="' + vendor.id + '"></option>';
+                    }).join('');
                 }
-                const value = meal.vendor_id != null ? String(meal.vendor_id) : '';
-                select.innerHTML = renderMealVendorOptions(value);
-                select.value = value;
             });
+        }
 
-            updateAddMealPlaceholder();
+        function getVendorIdByName(name) {
+            const trimmed = (name || '').trim();
+            const found = originalVendors.find(function(v) { return v.vendor === trimmed; });
+            return found ? found.id : null;
+        }
+
+        function getVendorNameById(id) {
+            if (id == null) return '';
+            const found = originalVendors.find(function(v) { return v.id === id; });
+            return found ? found.vendor : '';
         }
 
         function updateAddMealPlaceholder() {
@@ -496,7 +493,7 @@
             }
         }
 
-        function normalizeMealInput(dateValue, vendorValue, orderValue, priceValue, rateValue) {
+        function normalizeMealInput(dateValue, vendorNameValue, orderValue, priceValue, rateValue) {
             const date = dateValue.replace(/-/g, '').slice(2);
             const order = orderValue.trim();
             const price = parseFloat(priceValue);
@@ -506,8 +503,9 @@
                 return { error: '请选择日期！' };
             }
 
-            if (!vendorValue) {
-                return { error: '请选择商家！' };
+            const vendorId = getVendorIdByName(vendorNameValue);
+            if (vendorId == null) {
+                return { error: '请输入有效的商家名称！' };
             }
 
             if (isNaN(price) || price < 0) {
@@ -521,7 +519,7 @@
             return {
                 payload: {
                     date: date,
-                    vendor_id: parseInt(vendorValue, 10),
+                    vendor_id: vendorId,
                     order: order,
                     price: price,
                     rate: Math.round(rate * 2) / 2
@@ -545,7 +543,7 @@
                     }
 
                     renderVendorList();
-                    renderMealVendorSelects();
+                    renderMealVendorDatalist();
                 })
                 .catch(error => {
                     console.error('Error loading data:', error);
@@ -595,7 +593,7 @@
                 originalVendors = data.vendors;
                 applySortOrder();
                 renderVendorList();
-                renderMealVendorSelects();
+                renderMealVendorDatalist();
                 console.log('已自动设定K记权重为:', weight, '(今天是' + (dayOfWeek === 4 ? '星期四' : '非星期四') + ')');
             })
             .catch(error => {
@@ -635,7 +633,7 @@
                     vendors = data.vendors;
                     applySortOrder();
                     renderVendorList();
-                    renderMealVendorSelects();
+                    renderMealVendorDatalist();
                     nameInput.value = '';
                     weightInput.value = '100';
                     nameInput.focus();
@@ -670,7 +668,7 @@
                         vendors = data.vendors;
                         applySortOrder();
                         renderVendorList();
-                        renderMealVendorSelects();
+                        renderMealVendorDatalist();
                     }
                 })
                 .catch(error => {
@@ -776,7 +774,7 @@
                     vendors = data.vendors;
                     applySortOrder();
                     renderVendorList();
-                    renderMealVendorSelects();
+                    renderMealVendorDatalist();
                 }
             })
             .catch(error => {
@@ -920,7 +918,8 @@
                     '<input type="date" class="date-edit-input" id="meal-date-input-' + id + '" value="20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6) + '" style="display: none;" />' +
                     '<div class="meal-order" id="meal-order-display-' + id + '">' + getMealDisplayHtml(meal) + '</div>' +
                     '<div class="meal-order-editor" id="meal-order-editor-' + id + '">' +
-                    '<select class="meal-vendor-select" id="meal-vendor-input-' + id + '">' + renderMealVendorOptions(vendorValue) + '</select>' +
+                    '<input type="text" class="meal-vendor-input" id="meal-vendor-input-' + id + '" list="vendor-datalist-' + id + '" placeholder="输入或选择商家" value="' + escapeHtml(meal.vendor_name || '') + '" />' +
+                    '<datalist id="vendor-datalist-' + id + '"></datalist>' +
                     '<textarea class="meal-note-input" id="meal-order-input-' + id + '">' + escapeHtml(meal.order || '') + '</textarea>' +
                     '<div class="meal-other-hint" id="meal-other-hint-' + id + '"></div>' +
                     '</div>' +
@@ -937,7 +936,7 @@
                     '</div>';
             }).join('');
 
-            renderMealVendorSelects();
+            renderMealVendorDatalist();
         }
 
         function editMeal(mealId) {
@@ -977,7 +976,7 @@
 
             const displayDate = '20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6);
             document.getElementById('meal-date-input-' + mealId).value = displayDate;
-            document.getElementById('meal-vendor-input-' + mealId).value = meal.vendor_id != null ? String(meal.vendor_id) : '';
+            document.getElementById('meal-vendor-input-' + mealId).value = meal.vendor_name || '';
             document.getElementById('meal-order-input-' + mealId).value = meal.order || '';
             document.getElementById('meal-price-input-' + mealId).value = meal.price;
             document.getElementById('meal-rate-input-' + mealId).value = meal.rate;
