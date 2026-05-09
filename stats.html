@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>吃什么 - 统计</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Microsoft YaHei', Arial, sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  padding: 20px;
+  color: #333;
+}
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+}
+h1 {
+  text-align: center;
+  color: #fff;
+  font-size: 2em;
+  margin-bottom: 8px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
+}
+.subtitle {
+  text-align: center;
+  color: rgba(255,255,255,0.8);
+  margin-bottom: 24px;
+  font-size: 0.95em;
+}
+.subtitle a { color: rgba(255,255,255,0.9); }
+
+/* Overview Cards */
+.overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  transition: transform 0.2s;
+}
+.card:hover { transform: translateY(-2px); }
+.card .value {
+  font-size: 2em;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.card .label {
+  font-size: 0.85em;
+  color: #888;
+  margin-top: 4px;
+}
+
+/* Chart Sections */
+.chart-section {
+  background: #fff;
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+}
+.chart-section h2 {
+  font-size: 1.1em;
+  margin-bottom: 16px;
+  color: #444;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.chart-section h2 .icon {
+  font-size: 1.2em;
+}
+.chart-container {
+  position: relative;
+  width: 100%;
+}
+
+/* Two-column layout for smaller charts */
+.charts-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+@media (max-width: 700px) {
+  .charts-row { grid-template-columns: 1fr; }
+}
+
+/* Restaurant ranking list */
+.rank-list {
+  list-style: none;
+  padding: 0;
+}
+.rank-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 12px;
+  border-radius: 10px;
+  transition: background 0.15s;
+  gap: 12px;
+}
+.rank-item:hover { background: #f7f7ff; }
+.rank-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8em;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.rank-num.top1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff; }
+.rank-num.top2 { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: #fff; }
+.rank-num.top3 { background: linear-gradient(135deg, #CD7F32, #A0522D); color: #fff; }
+.rank-num.normal { background: #eee; color: #666; }
+.rank-name {
+  flex: 1;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rank-bar-wrap {
+  flex: 2;
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.rank-bar {
+  display: block;
+  height: 100%;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  transition: width 0.6s ease;
+}
+.rank-meta {
+  font-size: 0.82em;
+  color: #999;
+  width: 130px;
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.footer {
+  text-align: center;
+  color: rgba(255,255,255,0.5);
+  font-size: 0.8em;
+  margin-top: 16px;
+  padding-bottom: 20px;
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+  <h1>📊 吃什么 · 数据报告</h1>
+  <p class="subtitle"><a href="/">← 返回首页</a></p>
+
+  <!-- Overview Cards -->
+  <div class="overview" id="overview"></div>
+
+  <!-- Top Restaurants -->
+  <div class="chart-section">
+    <h2><span class="icon">🏆</span> 餐厅排行</h2>
+    <ul class="rank-list" id="rankList"></ul>
+  </div>
+
+  <!-- Charts Row 1 -->
+  <div class="charts-row">
+    <div class="chart-section">
+      <h2><span class="icon">📈</span> 月度消费趋势</h2>
+      <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+    </div>
+    <div class="chart-section">
+      <h2><span class="icon">⭐</span> 评分分布</h2>
+      <div class="chart-container"><canvas id="ratingChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Charts Row 2 -->
+  <div class="charts-row">
+    <div class="chart-section">
+      <h2><span class="icon">💰</span> 价格分布</h2>
+      <div class="chart-container"><canvas id="priceChart"></canvas></div>
+    </div>
+    <div class="chart-section">
+      <h2><span class="icon">🍽️</span> 餐厅评分 TOP10</h2>
+      <div class="chart-container" style="height:300px"><canvas id="vendorRatingChart"></canvas></div>
+    </div>
+  </div>
+
+  <p class="footer" id="footer"></p>
+</div>
+
+<script>
+const COLORS = [
+  '#667eea','#764ba2','#f093fb','#f5576c','#4facfe',
+  '#43e97b','#fa709a','#fee140','#a18cd1','#fbc2eb'
+];
+
+function fmt(n) {
+  return n.toFixed(2);
+}
+
+function formatMonth(ym) {
+  // "2603" => "2026-03"
+  return '20' + ym.slice(0,2) + '-' + ym.slice(2,4);
+}
+
+function formatDate(d) {
+  // "260509" => "2026-05-09"
+  return '20' + d.slice(0,2) + '-' + d.slice(2,4) + '-' + d.slice(4,6);
+}
+
+fetch('/api/stats')
+  .then(r => r.json())
+  .then(data => {
+    renderOverview(data);
+    renderRankList(data.topVendors);
+    renderMonthlyChart(data.monthly);
+    renderRatingChart(data.ratingDist);
+    renderPriceChart(data.priceDist);
+    renderVendorRatingChart(data.vendorRatings);
+    document.getElementById('footer').textContent =
+      '数据更新于 ' + new Date().toLocaleString('zh-CN');
+  })
+  .catch(err => {
+    document.getElementById('overview').innerHTML =
+      '<div class="card" style="grid-column:1/-1;color:#e74c3c">加载失败: ' + err.message + '</div>';
+  });
+
+function renderOverview(data) {
+  const s = data.summary;
+  const cards = [
+    { value: s.totalMeals, label: '总点餐次数' },
+    { value: '¥' + fmt(s.totalSpent), label: '累计消费' },
+    { value: '¥' + fmt(s.avgPrice), label: '平均单价' },
+    { value: s.avgRating + ' ⭐', label: '平均评分' },
+  ];
+  document.getElementById('overview').innerHTML = cards.map(c =>
+    '<div class="card"><div class="value">' + c.value + '</div><div class="label">' + c.label + '</div></div>'
+  ).join('');
+}
+
+function renderRankList(vendors) {
+  const maxCount = vendors[0]?.count || 1;
+  const list = document.getElementById('rankList');
+  list.innerHTML = vendors.slice(0, 15).map((v, i) => {
+    const cls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : 'normal';
+    const pct = (v.count / maxCount * 100).toFixed(0);
+    return '<li class="rank-item">' +
+      '<span class="rank-num ' + cls + '">' + (i+1) + '</span>' +
+      '<span class="rank-name">' + esc(v.vendor) + '</span>' +
+      '<span class="rank-bar-wrap"><span class="rank-bar" style="width:' + pct + '%"></span></span>' +
+      '<span class="rank-meta">' + v.count + '次 · ¥' + fmt(v.total) + '</span>' +
+      '</li>';
+  }).join('');
+}
+
+function renderMonthlyChart(monthly) {
+  new Chart(document.getElementById('monthlyChart'), {
+    type: 'line',
+    data: {
+      labels: monthly.map(m => formatMonth(m.month)),
+      datasets: [
+        {
+          label: '消费金额 (¥)',
+          data: monthly.map(m => m.total),
+          borderColor: '#667eea',
+          backgroundColor: 'rgba(102,126,234,0.1)',
+          fill: true,
+          tension: 0.3,
+          yAxisID: 'y',
+        },
+        {
+          label: '点餐次数',
+          data: monthly.map(m => m.count),
+          borderColor: '#f5576c',
+          backgroundColor: 'rgba(245,87,108,0.1)',
+          fill: false,
+          tension: 0.3,
+          yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        y: {
+          type: 'linear',
+          position: 'left',
+          title: { display: true, text: '消费 (¥)' },
+          beginAtZero: true,
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          title: { display: true, text: '次数' },
+          beginAtZero: true,
+          grid: { drawOnChartArea: false },
+        }
+      }
+    }
+  });
+}
+
+function renderRatingChart(dist) {
+  const labels = dist.map(d => d.rating + ' ⭐');
+  const counts = dist.map(d => d.count);
+  const colors = dist.map(d => {
+    if (d.rating >= 4) return '#43e97b';
+    if (d.rating >= 3) return '#667eea';
+    if (d.rating >= 2) return '#fa709a';
+    return '#f5576c';
+  });
+  new Chart(document.getElementById('ratingChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: '次数',
+        data: counts,
+        backgroundColor: colors,
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+}
+
+function renderPriceChart(dist) {
+  const labels = dist.map(d => d.range);
+  const counts = dist.map(d => d.count);
+  new Chart(document.getElementById('priceChart'), {
+    type: 'doughnut',
+    data: {
+      labels,
+      datasets: [{
+        data: counts,
+        backgroundColor: COLORS.slice(0, labels.length),
+        borderWidth: 2,
+        borderColor: '#fff',
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom', labels: { padding: 12 } },
+      }
+    }
+  });
+}
+
+function renderVendorRatingChart(vendors) {
+  const top = vendors.filter(v => v.count >= 2).slice(0, 10);
+  top.sort((a, b) => b.avgRating - a.avgRating);
+  new Chart(document.getElementById('vendorRatingChart'), {
+    type: 'bar',
+    data: {
+      labels: top.map(v => v.vendor),
+      datasets: [{
+        label: '平均评分',
+        data: top.map(v => v.avgRating),
+        backgroundColor: top.map(v => {
+          if (v.avgRating >= 4) return 'rgba(67,233,123,0.7)';
+          if (v.avgRating >= 3) return 'rgba(102,126,234,0.7)';
+          return 'rgba(245,87,108,0.7)';
+        }),
+        borderRadius: 6,
+      }]
+    },
+    options: {
+      indexAxis: 'y',
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { min: 0, max: 5, title: { display: true, text: '评分' } },
+        y: {
+          grid: { display: false },
+          ticks: {
+            callback: function(value, index) {
+              const label = this.getLabelForValue(value);
+              return label.length > 8 ? label.slice(0,8) + '…' : label;
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s || '';
+  return d.innerHTML;
+}
+</script>
+</body>
+</html>

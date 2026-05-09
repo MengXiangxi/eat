@@ -251,6 +251,127 @@ def validate_meal_payload(data, current=None):
 def index():
     return send_from_directory('.', 'eat.html')
 
+@app.route('/stats')
+def stats():
+    return send_from_directory('.', 'stats.html')
+
+
+@app.route('/api/stats')
+def api_stats():
+    with get_conn() as conn:
+        summary = conn.execute(
+            """
+            SELECT
+                COUNT(*) AS totalMeals,
+                COUNT(DISTINCT vendor_id) AS vendorsUsed,
+                ROUND(AVG(price), 2) AS avgPrice,
+                ROUND(MIN(price), 2) AS minPrice,
+                ROUND(MAX(price), 2) AS maxPrice,
+                ROUND(SUM(price), 2) AS totalSpent,
+                ROUND(AVG(rate), 1) AS avgRating
+            FROM meals
+            WHERE price > 0
+            """
+        ).fetchone()
+
+        top_vendors = conn.execute(
+            """
+            SELECT
+                v.vendor,
+                COUNT(m.id) AS count,
+                ROUND(AVG(m.price), 2) AS avgPrice,
+                ROUND(SUM(m.price), 2) AS total
+            FROM meals m
+            JOIN vendors v ON m.vendor_id = v.id
+            WHERE m.price > 0
+            GROUP BY m.vendor_id
+            ORDER BY count DESC, total DESC
+            LIMIT 15
+            """
+        ).fetchall()
+
+        monthly = conn.execute(
+            """
+            SELECT
+                SUBSTR(date, 1, 4) AS month,
+                COUNT(*) AS count,
+                ROUND(SUM(price), 2) AS total,
+                ROUND(AVG(price), 2) AS avgPrice
+            FROM meals
+            WHERE price > 0
+            GROUP BY month
+            ORDER BY month
+            """
+        ).fetchall()
+
+        rating_dist = conn.execute(
+            """
+            SELECT
+                ROUND(rate * 2) / 2 AS rating,
+                COUNT(*) AS count
+            FROM meals
+            WHERE price > 0
+            GROUP BY rating
+            ORDER BY rating DESC
+            """
+        ).fetchall()
+
+        price_dist = conn.execute(
+            """
+            SELECT
+                CASE
+                    WHEN price = 0 THEN '免费'
+                    WHEN price <= 10 THEN '¥0-10'
+                    WHEN price <= 15 THEN '¥10-15'
+                    WHEN price <= 20 THEN '¥15-20'
+                    WHEN price <= 25 THEN '¥20-25'
+                    WHEN price <= 30 THEN '¥25-30'
+                    WHEN price <= 40 THEN '¥30-40'
+                    ELSE '¥40+'
+                END AS range,
+                COUNT(*) AS count
+            FROM meals
+            GROUP BY range
+            ORDER BY MIN(price)
+            """
+        ).fetchall()
+
+        vendor_ratings = conn.execute(
+            """
+            SELECT
+                v.vendor,
+                COUNT(m.id) AS count,
+                ROUND(AVG(m.rate), 1) AS avgRating,
+                ROUND(AVG(m.price), 2) AS avgPrice
+            FROM meals m
+            JOIN vendors v ON m.vendor_id = v.id
+            WHERE m.price > 0
+            GROUP BY m.vendor_id
+            HAVING count >= 2
+            ORDER BY avgRating DESC, count DESC
+            LIMIT 10
+            """
+        ).fetchall()
+
+    return jsonify({
+        'summary': {
+            'totalMeals': summary['totalMeals'],
+            'vendorsUsed': summary['vendorsUsed'],
+            'avgPrice': summary['avgPrice'],
+            'minPrice': summary['minPrice'],
+            'maxPrice': summary['maxPrice'],
+            'totalSpent': summary['totalSpent'],
+            'avgRating': summary['avgRating'],
+        },
+        'topVendors': [dict(r) for r in top_vendors],
+        'monthly': [dict(r) for r in monthly],
+        'ratingDist': [dict(r) for r in rating_dist],
+        'priceDist': [dict(r) for r in price_dist],
+        'vendorRatings': [dict(r) for r in vendor_ratings],
+    })
+
+
+
 
 @app.route('/api/vendors', methods=['GET'])
 def get_vendors():
