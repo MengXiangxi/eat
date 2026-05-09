@@ -260,6 +260,11 @@ def index():
     return send_from_directory('.', 'eat_manage.html')
 
 
+@app.route("/common.css")
+def common_css():
+    return send_from_directory(".", "common.css")
+
+
 @app.route('/eat_manage.html')
 def eat_manage():
     return send_from_directory('.', 'eat_manage.html')
