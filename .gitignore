@@ -55,3 +55,6 @@ nohup.out
 # Docker overrides & local compose files
 docker-compose.override.yml
 docker-compose*.local.yml
+
+# Backup files
+*.bak*
