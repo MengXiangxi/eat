@@ -8,11 +8,11 @@
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  font-family: 'Microsoft YaHei', Arial, sans-serif;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+  background: #f4f3ef;
   min-height: 100vh;
   padding: 20px;
-  color: #333;
+  color: #3a3a3a;
 }
 .container {
   max-width: 960px;
@@ -20,18 +20,17 @@ body {
 }
 h1 {
   text-align: center;
-  color: #fff;
+  color: #4a6b5a;
   font-size: 2em;
   margin-bottom: 8px;
-  text-shadow: 0 2px 8px rgba(0,0,0,0.2);
 }
 .subtitle {
   text-align: center;
-  color: rgba(255,255,255,0.8);
+  color: #999;
   margin-bottom: 24px;
   font-size: 0.95em;
 }
-.subtitle a { color: rgba(255,255,255,0.9); }
+.subtitle a { color: #6b9080; }
 
 /* Overview Cards */
 .overview {
@@ -42,39 +41,36 @@ h1 {
 }
 .card {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 20px;
   text-align: center;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
   transition: transform 0.2s;
 }
 .card:hover { transform: translateY(-2px); }
 .card .value {
   font-size: 2em;
   font-weight: 700;
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #4a6b5a;
 }
 .card .label {
   font-size: 0.85em;
-  color: #888;
+  color: #999;
   margin-top: 4px;
 }
 
 /* Chart Sections */
 .chart-section {
   background: #fff;
-  border-radius: 16px;
+  border-radius: 12px;
   padding: 24px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
 }
 .chart-section h2 {
   font-size: 1.1em;
   margin-bottom: 16px;
-  color: #444;
+  color: #5a7a6a;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -106,11 +102,11 @@ h1 {
   display: flex;
   align-items: center;
   padding: 10px 12px;
-  border-radius: 10px;
+  border-radius: 8px;
   transition: background 0.15s;
   gap: 12px;
 }
-.rank-item:hover { background: #f7f7ff; }
+.rank-item:hover { background: #f5f5f2; }
 .rank-num {
   width: 28px;
   height: 28px;
@@ -122,10 +118,10 @@ h1 {
   font-weight: 700;
   flex-shrink: 0;
 }
-.rank-num.top1 { background: linear-gradient(135deg, #FFD700, #FFA500); color: #fff; }
-.rank-num.top2 { background: linear-gradient(135deg, #C0C0C0, #A0A0A0); color: #fff; }
-.rank-num.top3 { background: linear-gradient(135deg, #CD7F32, #A0522D); color: #fff; }
-.rank-num.normal { background: #eee; color: #666; }
+.rank-num.top1 { background: #d4c5a0; color: #fff; }
+.rank-num.top2 { background: #b8b8b0; color: #fff; }
+.rank-num.top3 { background: #c4a882; color: #fff; }
+.rank-num.normal { background: #e8e6e2; color: #888; }
 .rank-name {
   flex: 1;
   font-weight: 500;
@@ -135,16 +131,16 @@ h1 {
 }
 .rank-bar-wrap {
   flex: 2;
-  height: 8px;
-  background: #f0f0f0;
-  border-radius: 4px;
+  height: 6px;
+  background: #edecea;
+  border-radius: 3px;
   overflow: hidden;
 }
 .rank-bar {
   display: block;
   height: 100%;
-  border-radius: 4px;
-  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 3px;
+  background: #8fb5a3;
   transition: width 0.6s ease;
 }
 .rank-meta {
@@ -157,7 +153,7 @@ h1 {
 
 .footer {
   text-align: center;
-  color: rgba(255,255,255,0.5);
+  color: #bbb;
   font-size: 0.8em;
   margin-top: 16px;
   padding-bottom: 20px;
@@ -208,8 +204,8 @@ h1 {
 
 <script>
 const COLORS = [
-  '#667eea','#764ba2','#f093fb','#f5576c','#4facfe',
-  '#43e97b','#fa709a','#fee140','#a18cd1','#fbc2eb'
+  '#6b9080','#a4c3b2','#c4956a','#b8977a','#8ba5b5',
+  '#b5c4a1','#d4a574','#8b8eb8','#a0b8c8','#c4b5a1'
 ];
 
 function fmt(n) {
@@ -240,7 +236,7 @@ fetch('/api/stats')
   })
   .catch(err => {
     document.getElementById('overview').innerHTML =
-      '<div class="card" style="grid-column:1/-1;color:#e74c3c">加载失败: ' + err.message + '</div>';
+      '<div class="card" style="grid-column:1/-1;color:#c17b6b">加载失败: ' + err.message + '</div>';
   });
 
 function renderOverview(data) {
@@ -280,8 +276,8 @@ function renderMonthlyChart(monthly) {
         {
           label: '消费金额 (¥)',
           data: monthly.map(m => m.total),
-          borderColor: '#667eea',
-          backgroundColor: 'rgba(102,126,234,0.1)',
+          borderColor: '#6b9080',
+          backgroundColor: 'rgba(107,144,128,0.1)',
           fill: true,
           tension: 0.3,
           yAxisID: 'y',
@@ -289,8 +285,8 @@ function renderMonthlyChart(monthly) {
         {
           label: '点餐次数',
           data: monthly.map(m => m.count),
-          borderColor: '#f5576c',
-          backgroundColor: 'rgba(245,87,108,0.1)',
+          borderColor: '#c4956a',
+          backgroundColor: 'rgba(196,149,106,0.1)',
           fill: false,
           tension: 0.3,
           yAxisID: 'y1',
@@ -324,10 +320,10 @@ function renderRatingChart(dist) {
   const labels = dist.map(d => d.rating + ' ⭐');
   const counts = dist.map(d => d.count);
   const colors = dist.map(d => {
-    if (d.rating >= 4) return '#43e97b';
-    if (d.rating >= 3) return '#667eea';
-    if (d.rating >= 2) return '#fa709a';
-    return '#f5576c';
+    if (d.rating >= 4) return '#8fb5a3';
+    if (d.rating >= 3) return '#8ba5b5';
+    if (d.rating >= 2) return '#c4956a';
+    return '#c17b6b';
   });
   new Chart(document.getElementById('ratingChart'), {
     type: 'bar',
@@ -385,9 +381,9 @@ function renderVendorRatingChart(vendors) {
         label: '平均评分',
         data: top.map(v => v.avgRating),
         backgroundColor: top.map(v => {
-          if (v.avgRating >= 4) return 'rgba(67,233,123,0.7)';
-          if (v.avgRating >= 3) return 'rgba(102,126,234,0.7)';
-          return 'rgba(245,87,108,0.7)';
+          if (v.avgRating >= 4) return 'rgba(107,144,128,0.6)';
+          if (v.avgRating >= 3) return 'rgba(139,165,181,0.6)';
+          return 'rgba(193,123,107,0.6)';
         }),
         borderRadius: 6,
       }]
