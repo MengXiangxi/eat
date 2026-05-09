@@ -1,0 +1,254 @@
+/* ========================================
+ * 吃什么 - 公共样式
+ * 清新低饱和鼠尾草绿色系
+ * ======================================== */
+
+/* === Design Tokens === */
+:root {
+    --bg-page: #f4f3ef;
+    --bg-card: #ffffff;
+    --bg-item: #fafaf8;
+    --bg-accent: #e8efe8;
+    --bg-muted: #f5f5f2;
+
+    --color-primary: #4a6b5a;
+    --color-secondary: #5a7a6a;
+    --color-accent: #6b9080;
+    --color-accent-light: #a4c3b2;
+    --color-accent-bar: #8fb5a3;
+    --color-border: #c8ddd2;
+    --color-input-border: #e0ddd8;
+
+    --color-text: #3a3a3a;
+    --color-text-muted: #888;
+    --color-text-hint: #999;
+    --color-text-placeholder: #aaa;
+    --color-text-label: #5a5a5a;
+
+    --color-price: #5a7a6a;
+    --color-rate: #c4956a;
+    --color-danger: #c17b6b;
+    --color-danger-hover: #b06a5a;
+    --color-neutral: #9a9a9a;
+    --color-neutral-hover: #858585;
+
+    --color-gold: #d4c5a0;
+    --color-silver: #b8b8b0;
+    --color-bronze: #c4a882;
+
+    --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.06);
+    --shadow-hover: 0 2px 8px rgba(0, 0, 0, 0.05);
+    --shadow-button: 0 4px 12px rgba(74, 107, 90, 0.25);
+
+    --radius-lg: 16px;
+    --radius-md: 12px;
+    --radius-sm: 8px;
+    --radius-xs: 5px;
+}
+
+/* === Reset === */
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* === Base === */
+body {
+    font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
+    background: var(--bg-page);
+    min-height: 100vh;
+    padding: 20px;
+    color: var(--color-text);
+}
+
+/* === Typography === */
+h1 {
+    text-align: center;
+    color: var(--color-primary);
+    margin-bottom: 30px;
+    font-size: 2.5em;
+}
+
+.section {
+    margin-bottom: 30px;
+}
+
+.section h2 {
+    color: var(--color-secondary);
+    margin-bottom: 15px;
+    font-size: 1.5em;
+    border-bottom: 2px solid var(--color-border);
+    padding-bottom: 10px;
+}
+
+/* === Random Selection === */
+.random-section {
+    text-align: center;
+    padding: 30px;
+    background: var(--bg-accent);
+    border-radius: var(--radius-md);
+    margin-bottom: 30px;
+}
+
+.random-section button {
+    background: var(--color-primary);
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    padding: 15px 40px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.random-section button:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-button);
+}
+
+.random-section button:active {
+    transform: translateY(0);
+}
+
+.result {
+    margin-top: 20px;
+    font-size: 2em;
+    color: var(--color-primary);
+    font-weight: bold;
+    min-height: 50px;
+    animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: scale(0.8); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* === Vendor List === */
+.vendor-list {
+    display: grid;
+    gap: 10px;
+    overflow-y: auto;
+}
+
+.vendor-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: var(--bg-item);
+    border-radius: var(--radius-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.vendor-item:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.vendor-info {
+    display: flex;
+    gap: 20px;
+    align-items: center;
+}
+
+.vendor-name {
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--color-text);
+}
+
+.vendor-weight {
+    font-size: 14px;
+    color: var(--color-accent);
+    background: var(--bg-accent);
+    padding: 5px 10px;
+    border-radius: var(--radius-xs);
+}
+
+/* === Sort Control === */
+.sort-control {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.sort-control label {
+    color: var(--color-text-muted);
+    font-size: 14px;
+    font-weight: normal;
+}
+
+.sort-control select {
+    padding: 8px 12px;
+    border: 2px solid var(--color-input-border);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background-color: white;
+    cursor: pointer;
+    transition: border-color 0.3s;
+}
+
+.sort-control select:focus {
+    outline: none;
+    border-color: var(--color-accent);
+}
+
+.sort-control select:hover {
+    border-color: var(--color-accent-light);
+}
+
+/* === Meal Items === */
+.meal-item {
+    display: grid;
+    gap: 15px;
+    padding: 15px;
+    background: var(--bg-item);
+    border-radius: var(--radius-sm);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.meal-item:hover {
+    transform: translateX(5px);
+    box-shadow: var(--shadow-hover);
+}
+
+.meal-date {
+    font-size: 14px;
+    color: var(--color-text-muted);
+    font-weight: bold;
+}
+
+.meal-order {
+    font-size: 16px;
+    color: var(--color-text);
+}
+
+.meal-main {
+    font-weight: bold;
+    color: var(--color-text);
+}
+
+.meal-note {
+    margin-top: 4px;
+    font-size: 14px;
+    color: var(--color-text-muted);
+}
+
+.meal-price {
+    font-size: 16px;
+    color: var(--color-price);
+    font-weight: bold;
+}
+
+.meal-rate {
+    font-size: 14px;
+    color: var(--color-rate);
+}
+
+/* === Utilities === */
+.empty-message {
+    text-align: center;
+    color: var(--color-text-placeholder);
+    padding: 30px;
+    font-style: italic;
+}

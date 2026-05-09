@@ -8,7 +8,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application files
 COPY server.py .
-COPY eat.html stats.html .
+COPY server.py common.css eat.html stats.html .
 
 # Expose port
 EXPOSE 5000

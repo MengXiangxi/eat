@@ -4,222 +4,30 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>吃什么 - 随机选择餐厅</title>
+    <link rel="stylesheet" href="/common.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
         body {
-            font-family: 'Microsoft YaHei', 'Segoe UI', Arial, sans-serif;
-            background: #f4f3ef;
-            min-height: 100vh;
-            padding: 20px;
             display: flex;
             justify-content: center;
             align-items: center;
         }
 
         .container {
-            background: white;
-            border-radius: 16px;
-            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            background: var(--bg-card);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-card);
             max-width: 800px;
             width: 100%;
             padding: 40px;
         }
 
-        h1 {
-            text-align: center;
-            color: #4a6b5a;
-            margin-bottom: 30px;
-            font-size: 2.5em;
-        }
-
-        .section {
-            margin-bottom: 30px;
-        }
-
-        .section h2 {
-            color: #5a7a6a;
-            margin-bottom: 15px;
-            font-size: 1.5em;
-            border-bottom: 2px solid #c8ddd2;
-            padding-bottom: 10px;
-        }
-
-        .random-section {
-            text-align: center;
-            padding: 30px;
-            background: #e8efe8;
-            border-radius: 12px;
-            margin-bottom: 30px;
-        }
-
-        .random-section button {
-            background: #4a6b5a;
-            color: white;
-            font-size: 20px;
-            font-weight: bold;
-            padding: 15px 40px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .random-section button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(74, 107, 90, 0.25);
-        }
-
-        .random-section button:active {
-            transform: translateY(0);
-        }
-
-        .result {
-            margin-top: 20px;
-            font-size: 2em;
-            color: #4a6b5a;
-            font-weight: bold;
-            min-height: 50px;
-            animation: fadeIn 0.5s;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: scale(0.8); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
         .vendor-list {
-            display: grid;
-            gap: 10px;
             max-height: 500px;
-            overflow-y: auto;
-        }
-
-        .vendor-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            background: #fafaf8;
-            border-radius: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .vendor-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .vendor-info {
-            display: flex;
-            gap: 20px;
-            align-items: center;
-        }
-
-        .vendor-name {
-            font-size: 18px;
-            font-weight: bold;
-            color: #3a3a3a;
-        }
-
-        .vendor-weight {
-            font-size: 14px;
-            color: #6b9080;
-            background: #e8efe8;
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
-
-        .empty-message {
-            text-align: center;
-            color: #aaa;
-            padding: 30px;
-            font-style: italic;
-        }
-
-        .sort-control {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .sort-control label {
-            color: #888;
-            font-size: 14px;
-            font-weight: normal;
-        }
-
-        .sort-control select {
-            padding: 8px 12px;
-            border: 2px solid #e0ddd8;
-            border-radius: 8px;
-            font-size: 14px;
-            background-color: white;
-            cursor: pointer;
-            transition: border-color 0.3s;
-        }
-
-        .sort-control select:focus {
-            outline: none;
-            border-color: #6b9080;
-        }
-
-        .sort-control select:hover {
-            border-color: #a4c3b2;
         }
 
         .meal-item {
-            display: grid;
             grid-template-columns: 100px 1fr 100px 80px;
-            gap: 15px;
             align-items: center;
-            padding: 15px;
-            background: #fafaf8;
-            border-radius: 8px;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-
-        .meal-item:hover {
-            transform: translateX(5px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-        }
-
-        .meal-date {
-            font-size: 14px;
-            color: #888;
-            font-weight: bold;
-        }
-
-        .meal-order {
-            font-size: 16px;
-            color: #3a3a3a;
-        }
-
-        .meal-main {
-            font-weight: bold;
-            color: #3a3a3a;
-        }
-
-        .meal-note {
-            margin-top: 4px;
-            font-size: 14px;
-            color: #888;
-        }
-
-        .meal-price {
-            font-size: 16px;
-            color: #5a7a6a;
-            font-weight: bold;
-        }
-
-        .meal-rate {
-            font-size: 14px;
-            color: #c4956a;
         }
 
         .read-only-notice {
@@ -228,7 +36,7 @@
             border-radius: 10px;
             text-align: center;
             margin-bottom: 20px;
-            color: #5a5a5a;
+            color: var(--color-text-label);
         }
 
         .read-only-notice h3 {
@@ -240,7 +48,7 @@
             display: inline-block;
             margin-top: 10px;
             padding: 10px 20px;
-            background: #6b9080;
+            background: var(--color-accent);
             color: white;
             text-decoration: none;
             border-radius: 6px;
@@ -248,7 +56,7 @@
         }
 
         .manage-link:hover {
-            background: #5a7a6a;
+            background: var(--color-secondary);
         }
     </style>
 </head>

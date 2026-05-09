@@ -251,6 +251,12 @@ def validate_meal_payload(data, current=None):
 def index():
     return send_from_directory('.', 'eat.html')
 
+
+
+@app.route('/common.css')
+def common_css():
+    return send_from_directory('.', 'common.css')
+
 @app.route('/stats')
 def stats():
     return send_from_directory('.', 'stats.html')
