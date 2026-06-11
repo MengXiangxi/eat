@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
-from flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 import sqlite3
+from datetime import datetime, timedelta, timezone
 
 app = Flask(__name__)
 CORS(app)
@@ -149,113 +150,15 @@ def read_meals():
     return [serialize_meal(row) for row in rows]
 
 
-def get_vendor(vendor_id):
-    with get_conn() as conn:
-        row = conn.execute(
-            'SELECT id, vendor, weight FROM vendors WHERE id = ?',
-            (vendor_id,),
-        ).fetchone()
-    return row
-
-
-def get_meal(meal_id):
-    with get_conn() as conn:
-        row = conn.execute(
-            '''
-            SELECT
-                m.id,
-                m.date,
-                m.vendor_id,
-                v.vendor AS vendor_name,
-                m.order_text,
-                m.price,
-                m.rate,
-                m.image
-            FROM meals AS m
-            LEFT JOIN vendors AS v ON v.id = m.vendor_id
-            WHERE m.id = ?
-            ''',
-            (meal_id,),
-        ).fetchone()
-    return row
-
-
-def parse_weight(value):
-    try:
-        weight = int(value)
-    except (TypeError, ValueError):
-        return None
-    return weight if weight >= 0 else None
-
-
-def parse_price(value):
-    try:
-        price = float(value)
-    except (TypeError, ValueError):
-        return None
-    return price if price >= 0 else None
-
-
-def parse_rate(value):
-    try:
-        rate = float(value)
-    except (TypeError, ValueError):
-        return None
-    if rate < 0.5 or rate > 5:
-        return None
-    if abs(rate * 2 - round(rate * 2)) > 1e-6:
-        return None
-    return round(rate * 2) / 2
-
-
-def parse_vendor_id(value):
-    if value in (None, ''):
-        return None
-    try:
-        vendor_id = int(value)
-    except (TypeError, ValueError):
-        return None
-    return vendor_id if vendor_id > 0 else None
-
-
-def validate_meal_payload(data, current=None):
-    date = (data.get('date') or '').strip() if 'date' in data else (current['date'] if current else '')
-    order = str(data.get('order') or '').strip() if 'order' in data else (current['order_text'] if current else '')
-    price = parse_price(data.get('price')) if 'price' in data else (current['price'] if current else None)
-    rate = parse_rate(data.get('rate')) if 'rate' in data else (current['rate'] if current else None)
-    image = str(data.get('image') or '').strip() if 'image' in data else (current['image'] if current else '')
-    vendor_id = parse_vendor_id(data.get('vendor_id')) if 'vendor_id' in data else (current['vendor_id'] if current else None)
-
-    if not date:
-        return None, '日期不能为空'
-    if price is None:
-        return None, '价格必须大于等于0'
-    if rate is None:
-        return None, '评价必须在0.5-5之间，且以0.5为步长'
-    if vendor_id is None:
-        return None, '必须选择商家'
-    if vendor_id is not None and get_vendor(vendor_id) is None:
-        return None, '无效的商家ID'
-
-    return {
-        'date': date,
-        'vendor_id': vendor_id,
-        'order_text': order,
-        'price': price,
-        'rate': rate,
-        'image': image,
-    }, None
-
-
 @app.route('/')
 def index():
     return send_from_directory('.', 'eat.html')
 
 
-
 @app.route('/common.css')
 def common_css():
     return send_from_directory('.', 'common.css')
+
 
 @app.route('/stats')
 def stats():
@@ -377,151 +280,35 @@ def api_stats():
     })
 
 
+BJ_TZ = timezone(timedelta(hours=8))
+
+
+def ensure_kji_weight():
+    """自动调整K记权重：星期四 1000，其他 100"""
+    with get_conn() as conn:
+        kji = conn.execute(
+            "SELECT id, weight FROM vendors WHERE vendor = 'K记'"
+        ).fetchone()
+        if not kji:
+            return
+        target = 1000 if datetime.now(BJ_TZ).weekday() == 3 else 100
+        if kji['weight'] != target:
+            conn.execute(
+                "UPDATE vendors SET weight = ? WHERE id = ?",
+                (target, kji['id']),
+            )
+            conn.commit()
 
 
 @app.route('/api/vendors', methods=['GET'])
 def get_vendors():
+    ensure_kji_weight()
     return jsonify(read_vendors())
-
-
-@app.route('/api/vendors', methods=['POST'])
-def add_vendor():
-    data = request.get_json(silent=True) or {}
-    vendor_name = (data.get('vendor') or '').strip()
-    weight = parse_weight(data.get('weight', 100))
-
-    if not vendor_name:
-        return jsonify({'error': '商家名称不能为空'}), 400
-    if weight is None:
-        return jsonify({'error': '权重必须是大于等于0的整数'}), 400
-
-    try:
-        with get_conn() as conn:
-            conn.execute(
-                'INSERT INTO vendors (vendor, weight) VALUES (?, ?)',
-                (vendor_name, weight),
-            )
-            conn.commit()
-    except sqlite3.IntegrityError:
-        return jsonify({'error': '该商家已存在'}), 400
-
-    return jsonify({'success': True, 'vendors': read_vendors()})
-
-
-@app.route('/api/vendors/<int:vendor_id>', methods=['PUT'])
-def update_vendor(vendor_id):
-    data = request.get_json(silent=True) or {}
-    current = get_vendor(vendor_id)
-    if current is None:
-        return jsonify({'error': '无效的商家ID'}), 400
-
-    new_name = (data.get('vendor') or '').strip() or current['vendor']
-    new_weight = current['weight'] if data.get('weight') is None else parse_weight(data.get('weight'))
-
-    if not new_name:
-        return jsonify({'error': '商家名称不能为空'}), 400
-    if new_weight is None:
-        return jsonify({'error': '权重必须是大于等于0的整数'}), 400
-
-    try:
-        with get_conn() as conn:
-            conn.execute(
-                'UPDATE vendors SET vendor = ?, weight = ? WHERE id = ?',
-                (new_name, new_weight, vendor_id),
-            )
-            conn.commit()
-    except sqlite3.IntegrityError:
-        return jsonify({'error': '该商家名称已存在'}), 400
-
-    return jsonify({'success': True, 'vendors': read_vendors()})
-
-
-@app.route('/api/vendors/<int:vendor_id>', methods=['DELETE'])
-def delete_vendor(vendor_id):
-    if get_vendor(vendor_id) is None:
-        return jsonify({'error': '无效的商家ID'}), 400
-
-    with get_conn() as conn:
-        linked_meal = conn.execute(
-            'SELECT id FROM meals WHERE vendor_id = ? LIMIT 1',
-            (vendor_id,),
-        ).fetchone()
-        if linked_meal is not None:
-            return jsonify({'error': '该商家已被点餐记录引用，不能删除'}), 400
-        conn.execute('DELETE FROM vendors WHERE id = ?', (vendor_id,))
-        conn.commit()
-
-    return jsonify({'success': True, 'vendors': read_vendors()})
 
 
 @app.route('/api/meals', methods=['GET'])
 def get_meals():
     return jsonify(read_meals())
-
-
-@app.route('/api/meals', methods=['POST'])
-def add_meal():
-    data = request.get_json(silent=True) or {}
-    payload, error = validate_meal_payload(data)
-    if error:
-        return jsonify({'error': error}), 400
-
-    with get_conn() as conn:
-        conn.execute(
-            'INSERT INTO meals (date, vendor_id, order_text, price, rate, image) VALUES (?, ?, ?, ?, ?, ?)',
-            (
-                payload['date'],
-                payload['vendor_id'],
-                payload['order_text'],
-                payload['price'],
-                payload['rate'],
-                payload['image'],
-            ),
-        )
-        conn.commit()
-
-    return jsonify({'success': True, 'meals': read_meals()})
-
-
-@app.route('/api/meals/<int:meal_id>', methods=['PUT'])
-def update_meal(meal_id):
-    data = request.get_json(silent=True) or {}
-    current = get_meal(meal_id)
-    if current is None:
-        return jsonify({'error': '无效的点餐记录ID'}), 400
-
-    payload, error = validate_meal_payload(data, current)
-    if error:
-        return jsonify({'error': error}), 400
-
-    with get_conn() as conn:
-        conn.execute(
-            'UPDATE meals SET date = ?, vendor_id = ?, order_text = ?, price = ?, rate = ?, image = ? WHERE id = ?',
-            (
-                payload['date'],
-                payload['vendor_id'],
-                payload['order_text'],
-                payload['price'],
-                payload['rate'],
-                payload['image'],
-                meal_id,
-            ),
-        )
-        conn.commit()
-
-    return jsonify({'success': True, 'meals': read_meals()})
-
-
-@app.route('/api/meals/<int:meal_id>', methods=['DELETE'])
-def delete_meal(meal_id):
-    if get_meal(meal_id) is None:
-        return jsonify({'error': '无效的点餐记录ID'}), 400
-
-    with get_conn() as conn:
-        conn.execute('DELETE FROM meals WHERE id = ?', (meal_id,))
-        conn.commit()
-
-    return jsonify({'success': True, 'meals': read_meals()})
 
 
 @app.route('/img/<path:filename>')
@@ -534,4 +321,4 @@ ensure_db()
 if __name__ == '__main__':
     print('Server running at http://localhost:5000')
     print('Open http://localhost:5000 in your browser')
-    app.run(host='0.0.0.0', debug=True, port=5000)
+    app.run(host='0.0.0.0', debug=False, port=5000)

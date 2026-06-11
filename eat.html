@@ -103,7 +103,6 @@
                 .then(data => {
                     originalVendors = data;
                     vendors = data.filter(function(v) { return v.weight > 0; });
-                    checkAndSetKJiWeight();
 
                     const savedSortOrder = localStorage.getItem('sortOrder');
                     if (savedSortOrder) {
@@ -129,45 +128,6 @@
                     console.error('Error loading meals:', error);
                     alert('加载点餐记录失败，请确保服务器正在运行！');
                 });
-        }
-
-        function checkAndSetKJiWeight() {
-            const kji = originalVendors.find(function(vendor) {
-                return vendor.vendor === 'K记';
-            });
-
-            if (!kji) {
-                return;
-            }
-
-            const now = new Date();
-            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-            const beijingTime = new Date(utc + (3600000 * 8));
-            const dayOfWeek = beijingTime.getDay();
-            const weight = (dayOfWeek === 4) ? 1000 : 100;
-
-            fetch(API_URL + '/vendors/' + kji.id, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ vendor: 'K记', weight: weight })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    console.log('自动设定K记权重失败:', data.error);
-                    return;
-                }
-                originalVendors = data.vendors;
-                vendors = originalVendors.filter(function(v) { return v.weight > 0; });
-                applySortOrder();
-                renderVendorList();
-                console.log('已自动设定K记权重为:', weight, '(今天是' + (dayOfWeek === 4 ? '星期四' : '非星期四') + ')');
-            })
-            .catch(error => {
-                console.error('Error setting K记 weight:', error);
-            });
         }
 
         function changeSortOrder() {
@@ -223,7 +183,7 @@
             const resultDiv = document.getElementById('result');
 
             if (vendors.length === 0) {
-                resultDiv.textContent = '没有可选择的商家！';
+                resultDiv.textContent = '没有可选择商家！';
                 return;
             }
 
