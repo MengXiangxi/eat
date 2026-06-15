@@ -5,58 +5,198 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>吃什么 - 随机选择餐厅</title>
     <link rel="stylesheet" href="/common.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
         }
 
-        .container {
-            background: var(--bg-card);
-            border-radius: var(--radius-lg);
-            box-shadow: var(--shadow-card);
-            max-width: 800px;
-            width: 100%;
-            padding: 40px;
+        h1 {
+            font-size: 2em;
+            margin-bottom: 8px;
         }
 
         .vendor-list {
             max-height: 500px;
         }
 
-        .meal-item {
-            grid-template-columns: 100px 1fr 100px 80px;
-            align-items: center;
+        /* === Overview Cards === */
+        .overview {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 30px 0 24px;
         }
 
-        .read-only-notice {
-            background: #f5f0e8;
+        .card {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
             padding: 20px;
-            border-radius: 10px;
             text-align: center;
+            box-shadow: var(--shadow-card);
+            transition: transform 0.2s;
+        }
+
+        .card:hover { transform: translateY(-2px); }
+
+        .card .value {
+            font-size: 2em;
+            font-weight: 700;
+            color: var(--color-primary);
+        }
+
+        .card .label {
+            font-size: 0.85em;
+            color: var(--color-text-hint);
+            margin-top: 4px;
+        }
+
+        /* === Chart Sections === */
+        .chart-section {
+            background: var(--bg-card);
+            border-radius: var(--radius-md);
+            padding: 24px;
             margin-bottom: 20px;
-            color: var(--color-text-label);
+            box-shadow: var(--shadow-card);
         }
 
-        .read-only-notice h3 {
-            margin-bottom: 10px;
-            color: #8a7a6a;
+        .chart-section h2 {
+            font-size: 1.1em;
+            margin-bottom: 16px;
+            color: var(--color-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .manage-link {
-            display: inline-block;
-            margin-top: 10px;
-            padding: 10px 20px;
-            background: var(--color-accent);
-            color: white;
-            text-decoration: none;
+        .chart-section h2 .icon {
+            font-size: 1.2em;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+        }
+
+        /* Two-column layout */
+        .charts-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 700px) {
+            .charts-row { grid-template-columns: 1fr; }
+            .rank-bar-wrap { display: none; }
+        }
+
+        /* === Restaurant Ranking === */
+        .rank-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .rank-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: var(--radius-sm);
+            transition: background 0.15s;
+            gap: 12px;
+        }
+
+        .rank-item:hover { background: var(--bg-muted); }
+
+        .rank-num {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .rank-num.top1 { background: var(--color-gold); color: #fff; }
+        .rank-num.top2 { background: var(--color-silver); color: #fff; }
+        .rank-num.top3 { background: var(--color-bronze); color: #fff; }
+        .rank-num.normal { background: #e8e6e2; color: var(--color-text-muted); }
+
+        .rank-cell {
+            flex: 1;
+            position: relative;
+            min-width: 0;
+        }
+
+        .rank-name {
+            display: block;
+            font-weight: 500;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+
+        .rank-cell .tip {
+            position: absolute;
+            bottom: calc(100% + 6px);
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(38, 38, 38, 0.96);
+            color: #fff;
+            padding: 6px 12px;
             border-radius: 6px;
-            transition: background 0.3s;
+            font-size: 0.85em;
+            font-weight: 400;
+            white-space: nowrap;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.15s;
+            z-index: 100;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }
 
-        .manage-link:hover {
-            background: var(--color-secondary);
+        .rank-cell .tip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 5px solid transparent;
+            border-top-color: rgba(38, 38, 38, 0.96);
+        }
+
+        .rank-cell.active .tip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .rank-bar-wrap {
+            flex: 2;
+            height: 6px;
+            background: #edecea;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .rank-bar {
+            display: block;
+            height: 100%;
+            border-radius: 3px;
+            background: var(--color-accent-bar);
+            transition: width 0.6s ease;
+        }
+
+        .rank-meta {
+            font-size: 0.82em;
+            color: var(--color-text-hint);
+            width: 100px;
+            text-align: right;
+            flex-shrink: 0;
         }
     </style>
 </head>
@@ -64,11 +204,13 @@
     <div class="container">
         <h1>🍽️ 吃什么</h1>
 
+        <!-- 随机选择 -->
         <div class="random-section">
             <button onclick="randomSelect()">🎲 随机选择一家餐厅</button>
             <div class="result" id="result"></div>
         </div>
 
+        <!-- 商家列表 -->
         <div class="section">
             <h2>📋 商家列表 <span id="totalWeight" style="font-size: 0.8em; color: #666;"></span></h2>
             <div class="sort-control">
@@ -82,29 +224,59 @@
             <div class="vendor-list" id="vendorList"></div>
         </div>
 
-        <div class="section">
-            <h2>📝 点餐记录</h2>
-            <div class="vendor-list" id="mealList"></div>
+        <!-- 统计概览 -->
+        <div class="overview" id="overview"></div>
+
+        <!-- 餐厅排行 -->
+        <div class="chart-section">
+            <h2><span class="icon">🏆</span> 餐厅排行</h2>
+            <ul class="rank-list" id="rankList"></ul>
+        </div>
+
+        <!-- 图表: 月度趋势 + 评分分布 -->
+        <div class="charts-row">
+            <div class="chart-section">
+                <h2><span class="icon">📈</span> 月度消费趋势</h2>
+                <div class="chart-container"><canvas id="monthlyChart"></canvas></div>
+            </div>
+            <div class="chart-section">
+                <h2><span class="icon">⭐</span> 评分分布</h2>
+                <div class="chart-container"><canvas id="ratingChart"></canvas></div>
+            </div>
+        </div>
+
+        <!-- 图表: 价格分布 + 餐厅评分 TOP10 -->
+        <div class="charts-row">
+            <div class="chart-section">
+                <h2><span class="icon">💰</span> 价格分布</h2>
+                <div class="chart-container"><canvas id="priceChart"></canvas></div>
+            </div>
+            <div class="chart-section">
+                <h2><span class="icon">🍽️</span> 餐厅评分 TOP10</h2>
+                <div class="chart-container" style="height:300px"><canvas id="vendorRatingChart"></canvas></div>
+            </div>
         </div>
     </div>
 
     <script>
+        /* ==============================
+         *  商家列表 & 随机选择
+         * ============================== */
         let vendors = [];
         let originalVendors = [];
         let currentSortOrder = 'default';
-        let meals = [];
         const API_URL = (window.location.protocol === 'file:')
             ? 'http://localhost:5001/api'
             : '/api';
 
         function loadData() {
             fetch(API_URL + '/vendors')
-                .then(response => response.json())
-                .then(data => {
+                .then(function(response) { return response.json(); })
+                .then(function(data) {
                     originalVendors = data;
                     vendors = data.filter(function(v) { return v.weight > 0; });
 
-                    const savedSortOrder = localStorage.getItem('sortOrder');
+                    var savedSortOrder = localStorage.getItem('sortOrder');
                     if (savedSortOrder) {
                         currentSortOrder = savedSortOrder;
                         document.getElementById('sortSelect').value = savedSortOrder;
@@ -113,25 +285,14 @@
 
                     renderVendorList();
                 })
-                .catch(error => {
+                .catch(function(error) {
                     console.error('Error loading data:', error);
                     alert('加载数据失败，请确保服务器正在运行！');
-                });
-
-            fetch(API_URL + '/meals')
-                .then(response => response.json())
-                .then(data => {
-                    meals = data;
-                    renderMealList();
-                })
-                .catch(error => {
-                    console.error('Error loading meals:', error);
-                    alert('加载点餐记录失败，请确保服务器正在运行！');
                 });
         }
 
         function changeSortOrder() {
-            const sortSelect = document.getElementById('sortSelect');
+            var sortSelect = document.getElementById('sortSelect');
             currentSortOrder = sortSelect.value;
             localStorage.setItem('sortOrder', currentSortOrder);
             applySortOrder();
@@ -154,8 +315,8 @@
         }
 
         function renderVendorList() {
-            const listContainer = document.getElementById('vendorList');
-            const totalWeightElement = document.getElementById('totalWeight');
+            var listContainer = document.getElementById('vendorList');
+            var totalWeightElement = document.getElementById('totalWeight');
 
             if (vendors.length === 0) {
                 listContainer.innerHTML = '<div class="empty-message">暂无商家</div>';
@@ -163,7 +324,7 @@
                 return;
             }
 
-            const totalWeight = vendors.reduce(function(sum, vendor) {
+            var totalWeight = vendors.reduce(function(sum, vendor) {
                 return sum + vendor.weight;
             }, 0);
 
@@ -180,14 +341,14 @@
         }
 
         function randomSelect() {
-            const resultDiv = document.getElementById('result');
+            var resultDiv = document.getElementById('result');
 
             if (vendors.length === 0) {
                 resultDiv.textContent = '没有可选择商家！';
                 return;
             }
 
-            const totalWeight = vendors.reduce(function(sum, vendor) {
+            var totalWeight = vendors.reduce(function(sum, vendor) {
                 return sum + vendor.weight;
             }, 0);
 
@@ -196,9 +357,9 @@
                 return;
             }
 
-            let random = Math.random() * totalWeight;
+            var random = Math.random() * totalWeight;
 
-            for (let i = 0; i < vendors.length; i++) {
+            for (var i = 0; i < vendors.length; i++) {
                 random -= vendors[i].weight;
                 if (random <= 0) {
                     resultDiv.textContent = '🎉 ' + vendors[i].vendor;
@@ -209,59 +370,242 @@
             resultDiv.textContent = '🎉 ' + vendors[vendors.length - 1].vendor;
         }
 
-        function buildStars(rate) {
-            const value = Number(rate) || 0;
-            const fullStars = Math.floor(value);
-            const hasHalf = Math.abs(value - fullStars - 0.5) < 0.01;
-            return '★'.repeat(fullStars) + (hasHalf ? '⯨' : '');
+        /* ==============================
+         *  统计图表
+         * ============================== */
+        var STATS_COLORS = [
+            '#6b9080','#a4c3b2','#c4956a','#b8977a','#8ba5b5',
+            '#b5c4a1','#d4a574','#8b8eb8','#a0b8c8','#c4b5a1'
+        ];
+
+        function statsFmt(n) {
+            return n.toFixed(2);
         }
 
-        function escapeHtml(value) {
-            return String(value || '')
-                .replace(/&/g, '&amp;')
-                .replace(/</g, '&lt;')
-                .replace(/>/g, '&gt;')
-                .replace(/"/g, '&quot;')
-                .replace(/'/g, '&#39;');
+        function formatMonth(ym) {
+            return '20' + ym.slice(0,2) + '-' + ym.slice(2,4);
         }
 
-        function getMealOrderHtml(meal) {
-            var note = (meal.order || '').trim();
-            var name = meal.vendor_name || '';
-            return '<div class="meal-main">' + escapeHtml(name) + '</div>' +
-                (note ? '<div class="meal-note">' + escapeHtml(note) + '</div>' : '');
+        function esc(s) {
+            var d = document.createElement('div');
+            d.textContent = s || '';
+            return d.innerHTML;
         }
 
-        function renderMealList() {
-            const listContainer = document.getElementById('mealList');
-
-            if (meals.length === 0) {
-                listContainer.innerHTML = '<div class="empty-message">暂无点餐记录</div>';
-                return;
-            }
-
-            const sortedMeals = [...meals].sort(function(a, b) {
-                if (a.date === b.date) {
-                    return b.id - a.id;
-                }
-                return b.date.localeCompare(a.date);
+        // 加载统计数据
+        fetch('/api/stats')
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                renderOverview(data);
+                renderRankList(data.topVendors);
+                renderMonthlyChart(data.monthly);
+                renderRatingChart(data.ratingDist);
+                renderPriceChart(data.priceDist);
+                renderVendorRatingChart(data.vendorRatings);
+            })
+            .catch(function(err) {
+                console.error('加载统计数据失败:', err);
+                document.getElementById('overview').innerHTML =
+                    '<div class="card" style="grid-column:1/-1;color:var(--color-danger)">统计数据加载失败</div>';
             });
 
-            listContainer.innerHTML = sortedMeals.map(function(meal) {
-                const stars = meal.rate ? buildStars(meal.rate) : '';
-                const rateText = (Math.round(Number(meal.rate || 0) * 2) / 2).toString().replace(/\.0$/, '');
-                const displayDate = '20' + meal.date.slice(0, 2) + '-' + meal.date.slice(2, 4) + '-' + meal.date.slice(4, 6);
-                const priceText = isNaN(meal.price) ? meal.price : Number(meal.price).toFixed(2);
-
-                return '<div class="meal-item">' +
-                    '<span class="meal-date">' + displayDate + '</span>' +
-                    '<span class="meal-order">' + getMealOrderHtml(meal) + '</span>' +
-                    '<span class="meal-price">¥' + priceText + '</span>' +
-                    '<span class="meal-rate" title="评分: ' + rateText + '">' + stars + '</span>' +
-                    '</div>';
+        function renderOverview(data) {
+            var s = data.summary;
+            var cards = [
+                { value: s.totalMeals, label: '总点餐次数' },
+                { value: '¥' + statsFmt(s.totalSpent), label: '累计消费' },
+                { value: '¥' + statsFmt(s.avgPrice), label: '平均单价' },
+                { value: s.avgRating + ' ⭐', label: '平均评分' },
+            ];
+            document.getElementById('overview').innerHTML = cards.map(function(c) {
+                return '<div class="card"><div class="value">' + c.value + '</div><div class="label">' + c.label + '</div></div>';
             }).join('');
         }
 
+        function renderRankList(topVendors) {
+            var maxCount = topVendors[0] ? topVendors[0].count : 1;
+            document.getElementById('rankList').innerHTML = topVendors.slice(0, 15).map(function(v, i) {
+                var cls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : 'normal';
+                var pct = (v.count / maxCount * 100).toFixed(0);
+                return '<li class="rank-item">' +
+                    '<span class="rank-num ' + cls + '">' + (i+1) + '</span>' +
+                    '<span class="rank-cell">' +
+                        '<span class="rank-name" onclick="toggleRankTip(this)">' + esc(v.vendor) + '</span>' +
+                        '<span class="tip">' + esc(v.vendor) + '</span>' +
+                    '</span>' +
+                    '<span class="rank-bar-wrap"><span class="rank-bar" style="width:' + pct + '%"></span></span>' +
+                    '<span class="rank-meta">' + v.count + '次 · ¥' + statsFmt(v.total) + '</span>' +
+                    '</li>';
+            }).join('');
+        }
+
+        function renderMonthlyChart(monthly) {
+            new Chart(document.getElementById('monthlyChart'), {
+                type: 'line',
+                data: {
+                    labels: monthly.map(function(m) { return formatMonth(m.month); }),
+                    datasets: [
+                        {
+                            label: '消费金额 (¥)',
+                            data: monthly.map(function(m) { return m.total; }),
+                            borderColor: '#6b9080',
+                            backgroundColor: 'rgba(107,144,128,0.1)',
+                            fill: true,
+                            tension: 0.3,
+                            yAxisID: 'y',
+                        },
+                        {
+                            label: '点餐次数',
+                            data: monthly.map(function(m) { return m.count; }),
+                            borderColor: '#c4956a',
+                            backgroundColor: 'rgba(196,149,106,0.1)',
+                            fill: false,
+                            tension: 0.3,
+                            yAxisID: 'y1',
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { position: 'bottom' } },
+                    scales: {
+                        y: {
+                            type: 'linear',
+                            position: 'left',
+                            title: { display: true, text: '消费 (¥)' },
+                            beginAtZero: true,
+                        },
+                        y1: {
+                            type: 'linear',
+                            position: 'right',
+                            title: { display: true, text: '次数' },
+                            beginAtZero: true,
+                            grid: { drawOnChartArea: false },
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderRatingChart(dist) {
+            var sorted = dist.slice().sort(function(a, b) { return a.rating - b.rating; });
+            var labels = sorted.map(function(d) { return d.rating + ' ⭐'; });
+            var counts = sorted.map(function(d) { return d.count; });
+            var colors = sorted.map(function(d) {
+                if (d.rating >= 4) return '#8fb5a3';
+                if (d.rating >= 3) return '#8ba5b5';
+                if (d.rating >= 2) return '#c4956a';
+                return '#c17b6b';
+            });
+            new Chart(document.getElementById('ratingChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '次数',
+                        data: counts,
+                        backgroundColor: colors,
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderPriceChart(dist) {
+            var labels = dist.map(function(d) { return d.range; });
+            var counts = dist.map(function(d) { return d.count; });
+            new Chart(document.getElementById('priceChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: '次数',
+                        data: counts,
+                        backgroundColor: 'rgba(107,144,128,0.7)',
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+                        x: { grid: { display: false } }
+                    }
+                }
+            });
+        }
+
+        function renderVendorRatingChart(vendors) {
+            var top = vendors.filter(function(v) { return v.count >= 2; }).slice(0, 10);
+            top.sort(function(a, b) { return b.avgRating - a.avgRating; });
+            new Chart(document.getElementById('vendorRatingChart'), {
+                type: 'bar',
+                data: {
+                    labels: top.map(function(v) { return v.vendor; }),
+                    datasets: [{
+                        label: '平均评分',
+                        data: top.map(function(v) { return v.avgRating; }),
+                        backgroundColor: top.map(function(v) {
+                            if (v.avgRating >= 4) return 'rgba(107,144,128,0.6)';
+                            if (v.avgRating >= 3) return 'rgba(139,165,181,0.6)';
+                            return 'rgba(193,123,107,0.6)';
+                        }),
+                        borderRadius: 6,
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { min: 0, max: 5, title: { display: true, text: '评分' } },
+                        y: {
+                            grid: { display: false },
+                            ticks: {
+                                callback: function(value, index) {
+                                    var label = this.getLabelForValue(value);
+                                    return label.length > 8 ? label.slice(0,8) + '…' : label;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // 餐厅排行浮层：点击切换，点击外部关闭
+        function toggleRankTip(el) {
+            var cell = el.closest('.rank-cell');
+            if (!cell) return;
+            var wasActive = cell.classList.contains('active');
+            document.querySelectorAll('.rank-cell.active').forEach(function(n) {
+                n.classList.remove('active');
+            });
+            if (!wasActive) cell.classList.add('active');
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.rank-name')) {
+                document.querySelectorAll('.rank-cell.active').forEach(function(n) {
+                    n.classList.remove('active');
+                });
+            }
+        });
+
+        /* ==============================
+         *  初始化
+         * ============================== */
         document.addEventListener('DOMContentLoaded', function() {
             loadData();
         });
