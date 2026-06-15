@@ -93,7 +93,10 @@
 
   @media (max-width: 700px) {
     .charts-row { grid-template-columns: 1fr; }
+    /* 移动端隐藏进度条，把空间让给餐厅名称完整显示 */
+    .rank-bar-wrap { display: none; }
   }
+
 
   /* Restaurant ranking list */
   .rank-list {
@@ -129,12 +132,56 @@
   .rank-num.top3 { background: var(--color-bronze); color: #fff; }
   .rank-num.normal { background: #e8e6e2; color: var(--color-text-muted); }
 
-  .rank-name {
+  /* rank-cell 是 rank-name 的不截断包裹层，用于承载浮层 */
+  .rank-cell {
     flex: 1;
+    position: relative;
+    min-width: 0;
+  }
+
+  .rank-name {
+    display: block;
     font-weight: 500;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    cursor: pointer;
+  }
+
+  /* 点击弹出的完整名称浮层（视觉参考 Chart.js tooltip） */
+  .rank-cell .tip {
+    position: absolute;
+    bottom: calc(100% + 6px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(38, 38, 38, 0.96);
+    color: #fff;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.85em;
+    font-weight: 400;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.15s;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  }
+
+  .rank-cell .tip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(38, 38, 38, 0.96);
+  }
+
+  .rank-cell.active .tip {
+    opacity: 1;
+    visibility: visible;
   }
 
   .rank-bar-wrap {
@@ -156,7 +203,7 @@
   .rank-meta {
     font-size: 0.82em;
     color: var(--color-text-hint);
-    width: 130px;
+    width: 100px;
     text-align: right;
     flex-shrink: 0;
   }
@@ -268,7 +315,10 @@ function renderRankList(vendors) {
     const pct = (v.count / maxCount * 100).toFixed(0);
     return '<li class="rank-item">' +
       '<span class="rank-num ' + cls + '">' + (i+1) + '</span>' +
-      '<span class="rank-name">' + esc(v.vendor) + '</span>' +
+      '<span class="rank-cell">' +
+        '<span class="rank-name" onclick="toggleRankTip(this)">' + esc(v.vendor) + '</span>' +
+        '<span class="tip">' + esc(v.vendor) + '</span>' +
+      '</span>' +
       '<span class="rank-bar-wrap"><span class="rank-bar" style="width:' + pct + '%"></span></span>' +
       '<span class="rank-meta">' + v.count + '次 · ¥' + fmt(v.total) + '</span>' +
       '</li>';
@@ -325,9 +375,10 @@ function renderMonthlyChart(monthly) {
 }
 
 function renderRatingChart(dist) {
-  const labels = dist.map(d => d.rating + ' ⭐');
-  const counts = dist.map(d => d.count);
-  const colors = dist.map(d => {
+  const sorted = [...dist].sort((a, b) => a.rating - b.rating);
+  const labels = sorted.map(d => d.rating + ' ⭐');
+  const counts = sorted.map(d => d.count);
+  const colors = sorted.map(d => {
     if (d.rating >= 4) return '#8fb5a3';
     if (d.rating >= 3) return '#8ba5b5';
     if (d.rating >= 2) return '#c4956a';
@@ -359,20 +410,22 @@ function renderPriceChart(dist) {
   const labels = dist.map(d => d.range);
   const counts = dist.map(d => d.count);
   new Chart(document.getElementById('priceChart'), {
-    type: 'doughnut',
+    type: 'bar',
     data: {
       labels,
       datasets: [{
+        label: '次数',
         data: counts,
-        backgroundColor: COLORS.slice(0, labels.length),
-        borderWidth: 2,
-        borderColor: '#fff',
+        backgroundColor: 'rgba(107,144,128,0.7)',
+        borderRadius: 6,
       }]
     },
     options: {
       responsive: true,
-      plugins: {
-        legend: { position: 'bottom', labels: { padding: 12 } },
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } },
+        x: { grid: { display: false } }
       }
     }
   });
@@ -422,6 +475,21 @@ function esc(s) {
   d.textContent = s || '';
   return d.innerHTML;
 }
+
+// 餐厅排行浮层：点击切换，点击外部关闭，同一时间只允许一个打开
+function toggleRankTip(el) {
+  const cell = el.closest('.rank-cell');
+  if (!cell) return;
+  const wasActive = cell.classList.contains('active');
+  document.querySelectorAll('.rank-cell.active').forEach(n => n.classList.remove('active'));
+  if (!wasActive) cell.classList.add('active');
+}
+
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.rank-name')) {
+    document.querySelectorAll('.rank-cell.active').forEach(n => n.classList.remove('active'));
+  }
+});
 </script>
 </body>
 </html>
