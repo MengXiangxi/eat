@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
+import math
 import os
 import sqlite3
 import uuid
@@ -14,6 +15,62 @@ DB_FILE = os.environ.get('EAT_DB_PATH', os.path.join(BASE_DIR, 'eat.db'))
 IMG_DIR = os.environ.get('EAT_IMG_PATH', os.path.join(BASE_DIR, 'img'))
 ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
 
+INITIAL_VENDOR_WEIGHT = 200
+STAR_MULTIPLIERS = {
+    0.0: 0.05,
+    0.5: 0.30,
+    1.0: 0.50,
+    1.5: 0.60,
+    2.0: 0.70,
+    2.5: 0.85,
+    3.0: 1.00,
+}
+STAR_ADDITIONS = {
+    3.5: 5,
+    4.0: 10,
+    4.5: 15,
+    5.0: 30,
+}
+
+
+def calculate_c1_weight(rates):
+    if not rates:
+        return INITIAL_VENDOR_WEIGHT
+    q = float(INITIAL_VENDOR_WEIGHT)
+    for idx, raw_rate in enumerate(rates):
+        if idx == 0:
+            q *= 0.50
+        rate = round(float(raw_rate) * 2) / 2
+        if rate in STAR_MULTIPLIERS:
+            q *= STAR_MULTIPLIERS[rate]
+        elif rate in STAR_ADDITIONS:
+            q += STAR_ADDITIONS[rate]
+    n = len(rates)
+    w = q * math.sqrt(2.0 / (n + 1))
+    return max(1, int(round(w)))
+
+
+def recalculate_vendor_weight(conn, vendor_id):
+    if vendor_id is None:
+        return
+    vendor = conn.execute(
+        'SELECT id, weight FROM vendors WHERE id = ?',
+        (vendor_id,),
+    ).fetchone()
+    if vendor is None or vendor['weight'] == 0:
+        return
+    rates = [
+        row['rate']
+        for row in conn.execute(
+            'SELECT rate FROM meals WHERE vendor_id = ? ORDER BY date ASC, id ASC',
+            (vendor_id,),
+        ).fetchall()
+    ]
+    new_weight = calculate_c1_weight(rates)
+    conn.execute(
+        'UPDATE vendors SET weight = ? WHERE id = ?',
+        (new_weight, vendor_id),
+    )
 
 def get_conn():
     conn = sqlite3.connect(DB_FILE, timeout=30)
@@ -299,7 +356,7 @@ def get_vendors():
 def add_vendor():
     data = request.get_json(silent=True) or {}
     vendor_name = (data.get('vendor') or '').strip()
-    weight = parse_weight(data.get('weight', 100))
+    weight = parse_weight(data.get('weight', INITIAL_VENDOR_WEIGHT))
 
     if not vendor_name:
         return jsonify({'error': '商家名称不能为空'}), 400
@@ -390,9 +447,10 @@ def add_meal():
                 payload['include_in_stats'],
             ),
         )
+        recalculate_vendor_weight(conn, payload['vendor_id'])
         conn.commit()
 
-    return jsonify({'success': True, 'meals': read_meals()})
+    return jsonify({'success': True, 'meals': read_meals(), 'vendors': read_vendors()})
 
 
 @app.route('/api/meals/<int:meal_id>', methods=['PUT'])
@@ -420,21 +478,26 @@ def update_meal(meal_id):
                 meal_id,
             ),
         )
+        recalculate_vendor_weight(conn, current['vendor_id'])
+        if payload['vendor_id'] != current['vendor_id']:
+            recalculate_vendor_weight(conn, payload['vendor_id'])
         conn.commit()
 
-    return jsonify({'success': True, 'meals': read_meals()})
+    return jsonify({'success': True, 'meals': read_meals(), 'vendors': read_vendors()})
 
 
 @app.route('/api/meals/<int:meal_id>', methods=['DELETE'])
 def delete_meal(meal_id):
-    if get_meal(meal_id) is None:
+    current = get_meal(meal_id)
+    if current is None:
         return jsonify({'error': '无效的点餐记录ID'}), 400
 
     with get_conn() as conn:
         conn.execute('DELETE FROM meals WHERE id = ?', (meal_id,))
+        recalculate_vendor_weight(conn, current['vendor_id'])
         conn.commit()
 
-    return jsonify({'success': True, 'meals': read_meals()})
+    return jsonify({'success': True, 'meals': read_meals(), 'vendors': read_vendors()})
 
 
 @app.route('/api/upload_image', methods=['POST'])

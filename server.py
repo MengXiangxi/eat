@@ -294,27 +294,19 @@ def api_stats():
 BJ_TZ = timezone(timedelta(hours=8))
 
 
-def ensure_kji_weight():
-    """自动调整K记权重：星期四 1000，其他 100"""
-    with get_conn() as conn:
-        kji = conn.execute(
-            "SELECT id, weight FROM vendors WHERE vendor = 'K记'"
-        ).fetchone()
-        if not kji:
-            return
-        target = 1000 if datetime.now(BJ_TZ).weekday() == 3 else 100
-        if kji['weight'] != target:
-            conn.execute(
-                "UPDATE vendors SET weight = ? WHERE id = ?",
-                (target, kji['id']),
-            )
-            conn.commit()
+def apply_kji_thursday_weight(vendors):
+    """星期四将启用中的K记权重在接口返回时动态放大为1000，不覆盖数据库真实C1权重"""
+    if datetime.now(BJ_TZ).weekday() != 3:
+        return vendors
+    for v in vendors:
+        if v['vendor'] == 'K记' and v['weight'] > 0:
+            v['weight'] = 1000
+    return vendors
 
 
 @app.route('/api/vendors', methods=['GET'])
 def get_vendors():
-    ensure_kji_weight()
-    return jsonify(read_vendors())
+    return jsonify(apply_kji_thursday_weight(read_vendors()))
 
 
 @app.route('/api/meals', methods=['GET'])

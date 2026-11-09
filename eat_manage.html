@@ -247,7 +247,7 @@
             <h2>➕ 添加商家</h2>
             <div class="add-form">
                 <input type="text" id="vendorName" placeholder="商家名称" />
-                <input type="number" id="vendorWeight" placeholder="权重" value="100" min="0" />
+                <input type="number" id="vendorWeight" placeholder="权重" value="200" min="0" />
                 <button onclick="addVendor()">添加</button>
             </div>
         </div>
@@ -405,7 +405,6 @@
                 .then(data => {
                     originalVendors = data;
                     vendors = data;
-                    checkAndSetKJiWeight();
 
                     const savedSortOrder = localStorage.getItem('sortOrder');
                     if (savedSortOrder) {
@@ -432,45 +431,6 @@
                     console.error('Error loading meals:', error);
                     alert('加载点餐记录失败，请确保服务器正在运行！');
                 });
-        }
-
-        function checkAndSetKJiWeight() {
-            const kji = originalVendors.find(function(vendor) {
-                return vendor.vendor === 'K记';
-            });
-
-            if (!kji) {
-                return;
-            }
-
-            const now = new Date();
-            const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-            const beijingTime = new Date(utc + (3600000 * 8));
-            const dayOfWeek = beijingTime.getDay();
-            const weight = (dayOfWeek === 4) ? 3000 : 100;
-
-            fetch(API_URL + '/vendors/' + kji.id, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ vendor: 'K记', weight: weight })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.error) {
-                    console.log('自动设定K记权重失败:', data.error);
-                    return;
-                }
-                originalVendors = data.vendors;
-                applySortOrder();
-                renderVendorList();
-                renderMealVendorDatalist();
-                console.log('已自动设定K记权重为:', weight, '(今天是' + (dayOfWeek === 4 ? '星期四' : '非星期四') + ')');
-            })
-            .catch(error => {
-                console.error('Error setting K记 weight:', error);
-            });
         }
 
         function addVendor() {
@@ -507,7 +467,7 @@
                     renderVendorList();
                     renderMealVendorDatalist();
                     nameInput.value = '';
-                    weightInput.value = '100';
+                    weightInput.value = '200';
                     nameInput.focus();
                 }
             })
@@ -750,6 +710,11 @@
                 }
 
                 meals = data.meals;
+                if (data.vendors) {
+                    originalVendors = data.vendors;
+                    applySortOrder();
+                    renderVendorList();
+                }
                 renderMealList();
                 dateInput.value = '';
                 vendorInput.value = '';
@@ -891,6 +856,11 @@
                 }
 
                 meals = data.meals;
+                if (data.vendors) {
+                    originalVendors = data.vendors;
+                    applySortOrder();
+                    renderVendorList();
+                }
                 renderMealList();
             } catch (error) {
                 console.error('Error updating meal:', error);
@@ -909,6 +879,11 @@
                         alert(data.error);
                     } else {
                         meals = data.meals;
+                        if (data.vendors) {
+                            originalVendors = data.vendors;
+                            applySortOrder();
+                            renderVendorList();
+                        }
                         renderMealList();
                     }
                 })

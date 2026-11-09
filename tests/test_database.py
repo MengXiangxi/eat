@@ -369,6 +369,57 @@ class DatabaseTestCase(unittest.TestCase):
         self.assertNotIn('single-high-rating', [v['vendor'] for v in data['vendorRatings']])
         self.assertEqual(data['summary']['vendorsUsed'], 18)
 
+    def test_c1_dynamic_weight_lifecycle_and_zero_protection(self):
+        res = self.client.post('/api/vendors', json={'vendor': 'NewShop'})
+        self.assertEqual(res.status_code, 200)
+        v_id = next(v['id'] for v in res.get_json()['vendors'] if v['vendor'] == 'NewShop')
+        self.assertEqual(next(v['weight'] for v in res.get_json()['vendors'] if v['id'] == v_id), 200)
+
+        # 1st meal: 4.0 star -> (200 * 0.5 + 10) * sqrt(2/2) = 110
+        m1 = self.meal(v_id, price=20, rate=4.0, date='261001')
+        w1 = next(v['weight'] for v in self.client.get('/api/vendors').get_json() if v['id'] == v_id)
+        self.assertEqual(w1, 110)
+
+        # 2nd meal: 3.0 star (unchanged Q=110) -> 110 * sqrt(2/3) = 89.81 -> 90
+        m2 = self.meal(v_id, price=20, rate=3.0, date='261002')
+        w2 = next(v['weight'] for v in self.client.get('/api/vendors').get_json() if v['id'] == v_id)
+        self.assertEqual(w2, 90)
+
+        # Update 2nd meal to 4.0 star -> Q=120, 120 * sqrt(2/3) = 97.98 -> 98
+        self.client.put(f"/api/meals/{m2['id']}", json={'rate': 4.0})
+        w2_updated = next(v['weight'] for v in self.client.get('/api/vendors').get_json() if v['id'] == v_id)
+        self.assertEqual(w2_updated, 98)
+
+        # Delete both meals -> weight returns to 200
+        self.client.delete(f"/api/meals/{m2['id']}")
+        self.client.delete(f"/api/meals/{m1['id']}")
+        w_reset = next(v['weight'] for v in self.client.get('/api/vendors').get_json() if v['id'] == v_id)
+        self.assertEqual(w_reset, 200)
+
+        # Zero-weight vendor stays 0 after adding meals
+        z_id = self.vendor('ZeroShop', weight=0)
+        self.meal(z_id, price=15, rate=5.0, date='261003')
+        w_zero = next(v['weight'] for v in self.client.get('/api/vendors').get_json() if v['id'] == z_id)
+        self.assertEqual(w_zero, 0)
+
+    def test_kji_thursday_read_only_override(self):
+        from datetime import datetime
+        k_id = self.vendor('K记', weight=200)
+        self.meal(k_id, price=25, rate=3.0, date='261001')  # C1 weight becomes 100
+        with patch.object(server, 'datetime') as mock_dt:
+            # Thursday (weekday == 3)
+            mock_dt.now.return_value = datetime(2026, 11, 5, 12, 0, tzinfo=server.BJ_TZ)
+            pub_vendors = self.public.get('/api/vendors').get_json()
+            self.assertEqual(next(v['weight'] for v in pub_vendors if v['id'] == k_id), 1000)
+            # DB weight remains 100
+            mgr_vendors = self.client.get('/api/vendors').get_json()
+            self.assertEqual(next(v['weight'] for v in mgr_vendors if v['id'] == k_id), 100)
+
+            # Monday (weekday == 0)
+            mock_dt.now.return_value = datetime(2026, 11, 9, 12, 0, tzinfo=server.BJ_TZ)
+            pub_vendors_mon = self.public.get('/api/vendors').get_json()
+            self.assertEqual(next(v['weight'] for v in pub_vendors_mon if v['id'] == k_id), 100)
+
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)
