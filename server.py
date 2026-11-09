@@ -9,12 +9,12 @@ app = Flask(__name__)
 CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_FILE = os.path.join(BASE_DIR, 'eat.db')
-IMG_DIR = os.path.join(BASE_DIR, 'img')
+DB_FILE = os.environ.get('EAT_DB_PATH', os.path.join(BASE_DIR, 'eat.db'))
+IMG_DIR = os.environ.get('EAT_IMG_PATH', os.path.join(BASE_DIR, 'img'))
 
 
 def get_conn():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=30)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -69,12 +69,22 @@ def ensure_meal_vendor_schema(conn):
         WHERE vendor_id IS NOT NULL AND TRIM(order_text) != ''
         """
     )
-    conn.commit()
+
+
+def ensure_meal_stats_schema(conn):
+    columns = {row['name'] for row in conn.execute('PRAGMA table_info(meals)')}
+    if 'include_in_stats' not in columns:
+        conn.execute(
+            'ALTER TABLE meals ADD COLUMN include_in_stats '
+            'INTEGER NOT NULL DEFAULT 1 CHECK(include_in_stats IN (0, 1))'
+        )
 
 
 def ensure_db():
     os.makedirs(IMG_DIR, exist_ok=True)
     with get_conn() as conn:
+        # Acquire the write lock before inspecting schema: both services may start together.
+        conn.execute('BEGIN IMMEDIATE')
         conn.execute(
             '''
             CREATE TABLE IF NOT EXISTS vendors (
@@ -92,11 +102,13 @@ def ensure_db():
                 order_text TEXT NOT NULL DEFAULT '',
                 price REAL NOT NULL DEFAULT 0 CHECK(price >= 0),
                 rate REAL NOT NULL DEFAULT 1 CHECK(rate >= 0.5 AND rate <= 5),
-                image TEXT NOT NULL DEFAULT ''
+                image TEXT NOT NULL DEFAULT '',
+                include_in_stats INTEGER NOT NULL DEFAULT 1 CHECK(include_in_stats IN (0, 1))
             )
             '''
         )
         ensure_meal_vendor_schema(conn)
+        ensure_meal_stats_schema(conn)
         conn.commit()
 
 
@@ -118,6 +130,7 @@ def serialize_meal(row):
         'price': row['price'],
         'rate': row['rate'],
         'image': row['image'],
+        'include_in_stats': bool(row['include_in_stats']),
     }
 
 
@@ -141,7 +154,8 @@ def read_meals():
                 m.order_text,
                 m.price,
                 m.rate,
-                m.image
+                m.image,
+                m.include_in_stats
             FROM meals AS m
             LEFT JOIN vendors AS v ON v.id = m.vendor_id
             ORDER BY m.date DESC, m.id DESC
@@ -171,15 +185,14 @@ def api_stats():
         summary = conn.execute(
             """
             SELECT
-                COUNT(*) AS totalMeals,
+                COUNT(CASE WHEN include_in_stats = 1 THEN 1 END) AS totalMeals,
                 COUNT(DISTINCT vendor_id) AS vendorsUsed,
-                ROUND(AVG(price), 2) AS avgPrice,
-                ROUND(MIN(price), 2) AS minPrice,
-                ROUND(MAX(price), 2) AS maxPrice,
-                ROUND(SUM(price), 2) AS totalSpent,
+                ROUND(AVG(CASE WHEN include_in_stats = 1 AND price > 0 THEN price END), 2) AS avgPrice,
+                ROUND(MIN(CASE WHEN include_in_stats = 1 AND price > 0 THEN price END), 2) AS minPrice,
+                ROUND(MAX(CASE WHEN include_in_stats = 1 THEN price END), 2) AS maxPrice,
+                ROUND(COALESCE(SUM(CASE WHEN include_in_stats = 1 THEN price END), 0), 2) AS totalSpent,
                 ROUND(AVG(rate), 1) AS avgRating
             FROM meals
-            WHERE price > 0
             """
         ).fetchone()
 
@@ -188,11 +201,10 @@ def api_stats():
             SELECT
                 v.vendor,
                 COUNT(m.id) AS count,
-                ROUND(AVG(m.price), 2) AS avgPrice,
+                ROUND(AVG(CASE WHEN m.price > 0 THEN m.price END), 2) AS avgPrice,
                 ROUND(SUM(m.price), 2) AS total
             FROM meals m
             JOIN vendors v ON m.vendor_id = v.id
-            WHERE m.price > 0
             GROUP BY m.vendor_id
             ORDER BY count DESC, total DESC
             LIMIT 15
@@ -205,9 +217,9 @@ def api_stats():
                 SUBSTR(date, 1, 4) AS month,
                 COUNT(*) AS count,
                 ROUND(SUM(price), 2) AS total,
-                ROUND(AVG(price), 2) AS avgPrice
+                ROUND(AVG(CASE WHEN price > 0 THEN price END), 2) AS avgPrice
             FROM meals
-            WHERE price > 0
+            WHERE include_in_stats = 1
             GROUP BY month
             ORDER BY month
             """
@@ -219,7 +231,6 @@ def api_stats():
                 ROUND(rate * 2) / 2 AS rating,
                 COUNT(*) AS count
             FROM meals
-            WHERE price > 0
             GROUP BY rating
             ORDER BY rating DESC
             """
@@ -240,6 +251,7 @@ def api_stats():
                 END AS range,
                 COUNT(*) AS count
             FROM meals
+            WHERE include_in_stats = 1
             GROUP BY range
             ORDER BY MIN(price)
             """
@@ -251,10 +263,9 @@ def api_stats():
                 v.vendor,
                 COUNT(m.id) AS count,
                 ROUND(AVG(m.rate), 1) AS avgRating,
-                ROUND(AVG(m.price), 2) AS avgPrice
+                ROUND(AVG(CASE WHEN m.price > 0 THEN m.price END), 2) AS avgPrice
             FROM meals m
             JOIN vendors v ON m.vendor_id = v.id
-            WHERE m.price > 0
             GROUP BY m.vendor_id
             HAVING count >= 2
             ORDER BY avgRating DESC, count DESC

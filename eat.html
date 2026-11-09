@@ -379,7 +379,7 @@
         ];
 
         function statsFmt(n) {
-            return n.toFixed(2);
+            return n == null ? '—' : Number(n).toFixed(2);
         }
 
         function formatMonth(ym) {
@@ -414,8 +414,8 @@
             var cards = [
                 { value: s.totalMeals, label: '总点餐次数' },
                 { value: '¥' + statsFmt(s.totalSpent), label: '累计消费' },
-                { value: '¥' + statsFmt(s.avgPrice), label: '平均单价' },
-                { value: s.avgRating + ' ⭐', label: '平均评分' },
+                { value: s.avgPrice == null ? '—' : '¥' + statsFmt(s.avgPrice), label: '平均单价' },
+                { value: s.avgRating == null ? '—' : s.avgRating + ' ⭐', label: '平均评分' },
             ];
             document.getElementById('overview').innerHTML = cards.map(function(c) {
                 return '<div class="card"><div class="value">' + c.value + '</div><div class="label">' + c.label + '</div></div>';
@@ -423,6 +423,10 @@
         }
 
         function renderRankList(topVendors) {
+            if (!topVendors.length) {
+                document.getElementById('rankList').innerHTML = '<li class="empty-message">暂无数据</li>';
+                return;
+            }
             var maxCount = topVendors[0] ? topVendors[0].count : 1;
             document.getElementById('rankList').innerHTML = topVendors.slice(0, 15).map(function(v, i) {
                 var cls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : 'normal';
@@ -439,7 +443,23 @@
             }).join('');
         }
 
+        function chartEmpty(id, rows) {
+            const canvas = document.getElementById(id);
+            const empty = canvas.parentElement.querySelector('.chart-empty');
+            if (empty) empty.remove();
+            canvas.hidden = !rows.length;
+            if (!rows.length) {
+                const message = document.createElement('div');
+                message.className = 'empty-message chart-empty';
+                message.textContent = '暂无数据';
+                canvas.parentElement.appendChild(message);
+                return true;
+            }
+            return false;
+        }
+
         function renderMonthlyChart(monthly) {
+            if (chartEmpty('monthlyChart', monthly)) return;
             new Chart(document.getElementById('monthlyChart'), {
                 type: 'line',
                 data: {
@@ -489,6 +509,7 @@
         }
 
         function renderRatingChart(dist) {
+            if (chartEmpty('ratingChart', dist)) return;
             var sorted = dist.slice().sort(function(a, b) { return a.rating - b.rating; });
             var labels = sorted.map(function(d) { return d.rating + ' ⭐'; });
             var counts = sorted.map(function(d) { return d.count; });
@@ -521,6 +542,7 @@
         }
 
         function renderPriceChart(dist) {
+            if (chartEmpty('priceChart', dist)) return;
             var labels = dist.map(function(d) { return d.range; });
             var counts = dist.map(function(d) { return d.count; });
             new Chart(document.getElementById('priceChart'), {
@@ -548,6 +570,7 @@
         function renderVendorRatingChart(vendors) {
             var top = vendors.filter(function(v) { return v.count >= 2; }).slice(0, 10);
             top.sort(function(a, b) { return b.avgRating - a.avgRating; });
+            if (chartEmpty('vendorRatingChart', top)) return;
             new Chart(document.getElementById('vendorRatingChart'), {
                 type: 'bar',
                 data: {

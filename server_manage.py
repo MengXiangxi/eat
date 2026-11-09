@@ -10,13 +10,13 @@ app = Flask(__name__)
 CORS(app)
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-DB_FILE = os.path.join(BASE_DIR, 'eat.db')
-IMG_DIR = os.path.join(BASE_DIR, 'img')
+DB_FILE = os.environ.get('EAT_DB_PATH', os.path.join(BASE_DIR, 'eat.db'))
+IMG_DIR = os.environ.get('EAT_IMG_PATH', os.path.join(BASE_DIR, 'img'))
 ALLOWED_EXTENSIONS = {'.png', '.jpg', '.jpeg', '.gif', '.webp'}
 
 
 def get_conn():
-    conn = sqlite3.connect(DB_FILE)
+    conn = sqlite3.connect(DB_FILE, timeout=30)
     conn.row_factory = sqlite3.Row
     return conn
 
@@ -71,12 +71,22 @@ def ensure_meal_vendor_schema(conn):
         WHERE vendor_id IS NOT NULL AND TRIM(order_text) != ''
         """
     )
-    conn.commit()
+
+
+def ensure_meal_stats_schema(conn):
+    columns = {row['name'] for row in conn.execute('PRAGMA table_info(meals)')}
+    if 'include_in_stats' not in columns:
+        conn.execute(
+            'ALTER TABLE meals ADD COLUMN include_in_stats '
+            'INTEGER NOT NULL DEFAULT 1 CHECK(include_in_stats IN (0, 1))'
+        )
 
 
 def ensure_db():
     os.makedirs(IMG_DIR, exist_ok=True)
     with get_conn() as conn:
+        # Acquire the write lock before inspecting schema: both services may start together.
+        conn.execute('BEGIN IMMEDIATE')
         conn.execute(
             '''
             CREATE TABLE IF NOT EXISTS vendors (
@@ -94,11 +104,13 @@ def ensure_db():
                 order_text TEXT NOT NULL DEFAULT '',
                 price REAL NOT NULL DEFAULT 0 CHECK(price >= 0),
                 rate REAL NOT NULL DEFAULT 1 CHECK(rate >= 0.5 AND rate <= 5),
-                image TEXT NOT NULL DEFAULT ''
+                image TEXT NOT NULL DEFAULT '',
+                include_in_stats INTEGER NOT NULL DEFAULT 1 CHECK(include_in_stats IN (0, 1))
             )
             '''
         )
         ensure_meal_vendor_schema(conn)
+        ensure_meal_stats_schema(conn)
         conn.commit()
 
 
@@ -120,6 +132,7 @@ def serialize_meal(row):
         'price': row['price'],
         'rate': row['rate'],
         'image': row['image'],
+        'include_in_stats': bool(row['include_in_stats']),
     }
 
 
@@ -143,7 +156,8 @@ def read_meals():
                 m.order_text,
                 m.price,
                 m.rate,
-                m.image
+                m.image,
+                m.include_in_stats
             FROM meals AS m
             LEFT JOIN vendors AS v ON v.id = m.vendor_id
             ORDER BY m.date DESC, m.id DESC
@@ -173,7 +187,8 @@ def get_meal(meal_id):
                 m.order_text,
                 m.price,
                 m.rate,
-                m.image
+                m.image,
+                m.include_in_stats
             FROM meals AS m
             LEFT JOIN vendors AS v ON v.id = m.vendor_id
             WHERE m.id = ?
@@ -229,6 +244,10 @@ def validate_meal_payload(data, current=None):
     image = str(data.get('image') or '').strip() if 'image' in data else (current['image'] if current else '')
     vendor_id = parse_vendor_id(data.get('vendor_id')) if 'vendor_id' in data else (current['vendor_id'] if current else None)
 
+    include_in_stats = data.get('include_in_stats', bool(current['include_in_stats']) if current is not None else True)
+    if type(include_in_stats) is not bool:
+        return None, 'include_in_stats必须是布尔值'
+
     if not date:
         return None, '日期不能为空'
     if price is None:
@@ -247,6 +266,7 @@ def validate_meal_payload(data, current=None):
         'price': price,
         'rate': rate,
         'image': image,
+        'include_in_stats': include_in_stats,
     }, None
 
 
@@ -359,7 +379,7 @@ def add_meal():
 
     with get_conn() as conn:
         conn.execute(
-            'INSERT INTO meals (date, vendor_id, order_text, price, rate, image) VALUES (?, ?, ?, ?, ?, ?)',
+            'INSERT INTO meals (date, vendor_id, order_text, price, rate, image, include_in_stats) VALUES (?, ?, ?, ?, ?, ?, ?)',
             (
                 payload['date'],
                 payload['vendor_id'],
@@ -367,6 +387,7 @@ def add_meal():
                 payload['price'],
                 payload['rate'],
                 payload['image'],
+                payload['include_in_stats'],
             ),
         )
         conn.commit()
@@ -387,7 +408,7 @@ def update_meal(meal_id):
 
     with get_conn() as conn:
         conn.execute(
-            'UPDATE meals SET date = ?, vendor_id = ?, order_text = ?, price = ?, rate = ?, image = ? WHERE id = ?',
+            'UPDATE meals SET date = ?, vendor_id = ?, order_text = ?, price = ?, rate = ?, image = ?, include_in_stats = ? WHERE id = ?',
             (
                 payload['date'],
                 payload['vendor_id'],
@@ -395,6 +416,7 @@ def update_meal(meal_id):
                 payload['price'],
                 payload['rate'],
                 payload['image'],
+                payload['include_in_stats'],
                 meal_id,
             ),
         )

@@ -266,7 +266,7 @@ const COLORS = [
 ];
 
 function fmt(n) {
-  return n.toFixed(2);
+  return n == null ? '—' : Number(n).toFixed(2);
 }
 
 function formatMonth(ym) {
@@ -299,8 +299,8 @@ function renderOverview(data) {
   const cards = [
     { value: s.totalMeals, label: '总点餐次数' },
     { value: '¥' + fmt(s.totalSpent), label: '累计消费' },
-    { value: '¥' + fmt(s.avgPrice), label: '平均单价' },
-    { value: s.avgRating + ' ⭐', label: '平均评分' },
+    { value: s.avgPrice == null ? '—' : '¥' + fmt(s.avgPrice), label: '平均单价' },
+    { value: s.avgRating == null ? '—' : s.avgRating + ' ⭐', label: '平均评分' },
   ];
   document.getElementById('overview').innerHTML = cards.map(c =>
     '<div class="card"><div class="value">' + c.value + '</div><div class="label">' + c.label + '</div></div>'
@@ -310,6 +310,10 @@ function renderOverview(data) {
 function renderRankList(vendors) {
   const maxCount = vendors[0]?.count || 1;
   const list = document.getElementById('rankList');
+  if (!vendors.length) {
+    list.innerHTML = '<li class="empty-message">暂无数据</li>';
+    return;
+  }
   list.innerHTML = vendors.slice(0, 15).map((v, i) => {
     const cls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : 'normal';
     const pct = (v.count / maxCount * 100).toFixed(0);
@@ -325,7 +329,23 @@ function renderRankList(vendors) {
   }).join('');
 }
 
+function chartEmpty(id, rows) {
+  const canvas = document.getElementById(id);
+  const empty = canvas.parentElement.querySelector('.chart-empty');
+  if (empty) empty.remove();
+  canvas.hidden = !rows.length;
+  if (!rows.length) {
+    const message = document.createElement('div');
+    message.className = 'empty-message chart-empty';
+    message.textContent = '暂无数据';
+    canvas.parentElement.appendChild(message);
+    return true;
+  }
+  return false;
+}
+
 function renderMonthlyChart(monthly) {
+  if (chartEmpty('monthlyChart', monthly)) return;
   new Chart(document.getElementById('monthlyChart'), {
     type: 'line',
     data: {
@@ -375,6 +395,7 @@ function renderMonthlyChart(monthly) {
 }
 
 function renderRatingChart(dist) {
+  if (chartEmpty('ratingChart', dist)) return;
   const sorted = [...dist].sort((a, b) => a.rating - b.rating);
   const labels = sorted.map(d => d.rating + ' ⭐');
   const counts = sorted.map(d => d.count);
@@ -407,6 +428,7 @@ function renderRatingChart(dist) {
 }
 
 function renderPriceChart(dist) {
+  if (chartEmpty('priceChart', dist)) return;
   const labels = dist.map(d => d.range);
   const counts = dist.map(d => d.count);
   new Chart(document.getElementById('priceChart'), {
@@ -434,6 +456,7 @@ function renderPriceChart(dist) {
 function renderVendorRatingChart(vendors) {
   const top = vendors.filter(v => v.count >= 2).slice(0, 10);
   top.sort((a, b) => b.avgRating - a.avgRating);
+  if (chartEmpty('vendorRatingChart', top)) return;
   new Chart(document.getElementById('vendorRatingChart'), {
     type: 'bar',
     data: {

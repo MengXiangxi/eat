@@ -31,6 +31,7 @@ ENV/
 .coverage.*
 htmlcov/
 .cache/
+sandbox/
 
 # Logs & runtime artifacts
 *.log
@@ -58,3 +59,10 @@ docker-compose*.local.yml
 
 # Backup files
 *.bak*
+
+# Deployment snapshots & migration scratch space (server-side only)
+backups/
+staging/
+
+# Runtime image uploads (mounted into the container, not source)
+img/

@@ -1,0 +1,4 @@
+# Normalize text files to LF in the repository and in the Linux working tree.
+# The Windows sync directory uploads CRLF files; without this every edit shows
+# up as a whole-file diff.
+* text=auto eol=lf
