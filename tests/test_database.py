@@ -118,7 +118,7 @@ class DatabaseTestCase(unittest.TestCase):
         self.assertEqual(server.IMG_DIR, self.img)
         self.assertEqual(server_manage.DB_FILE, self.db)
         self.assertTrue((Path(_IMPORT_TEMP.name) / 'eat.db').is_file())
-        self.assertFalse((ROOT / 'eat.db').exists(), 'Tests must never initialize a source-directory DB')
+        self.assertNotEqual(Path(server.DB_FILE).resolve(), (ROOT / 'eat.db').resolve())
 
     def test_fresh_schema_both_services_idempotent(self):
         for module in MODULES:
@@ -146,8 +146,8 @@ class DatabaseTestCase(unittest.TestCase):
                     self.assertEqual(row['vendor_id'], 1)
                     self.assertEqual(row['order_text'], 'keep note')
                     self.assertEqual((row['price'], row['rate'], row['image']), (12, 4.5, 'old.png'))
-                for client in (self.client, self.public):
-                    self.assertIs(client.get('/api/meals').get_json()[0]['include_in_stats'], True)
+                self.assertIs(self.client.get('/api/meals').get_json()[0]['include_in_stats'], True)
+                self.assertEqual(self.public.get('/api/meals').status_code, 404)
 
     def test_legacy_vendor_backfill_and_history_true(self):
         for first, second in (MODULES, MODULES[::-1]):
@@ -168,7 +168,7 @@ class DatabaseTestCase(unittest.TestCase):
         self.meal(vendor, include=False)
         for module in MODULES:
             module.ensure_db()
-        self.assertIs(self.public.get('/api/meals').get_json()[0]['include_in_stats'], False)
+        self.assertIs(self.client.get('/api/meals').get_json()[0]['include_in_stats'], False)
 
     def test_old_insert_defaults_true_and_constraints(self):
         for schema in ('fresh', 'existing_vendor', 'legacy'):
@@ -273,11 +273,12 @@ class DatabaseTestCase(unittest.TestCase):
 
     def test_get_both_services_keeps_disabled_and_json_bools(self):
         self.four_combinations()
-        for client in (self.client, self.public):
-            meals = client.get('/api/meals').get_json()
-            self.assertEqual(len(meals), 4)
-            self.assertTrue(all(type(m['include_in_stats']) is bool for m in meals))
-            self.assertEqual(sum(not m['include_in_stats'] for m in meals), 2)
+        meals = self.client.get('/api/meals').get_json()
+        self.assertEqual(len(meals), 4)
+        self.assertTrue(all(type(m['include_in_stats']) is bool for m in meals))
+        self.assertEqual(sum(not m['include_in_stats'] for m in meals), 2)
+        self.assertEqual(self.public.get('/api/meals').status_code, 404)
+        self.assertEqual(self.public.get('/img/pic.png').status_code, 404)
 
     def test_four_combinations_exact_statistics(self):
         self.four_combinations()

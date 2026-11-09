@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, jsonify, request, send_from_directory
-from flask_cors import CORS
 import math
 import os
 import sqlite3
@@ -8,7 +7,7 @@ import uuid
 from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
-CORS(app)
+app.config['MAX_CONTENT_LENGTH'] = 10 * 1024 * 1024
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_FILE = os.environ.get('EAT_DB_PATH', os.path.join(BASE_DIR, 'eat.db'))
@@ -530,4 +529,4 @@ ensure_db()
 if __name__ == '__main__':
     print('Management server running at http://localhost:5001')
     print('Open http://localhost:5001 in your browser for management')
-    app.run(host='0.0.0.0', debug=True, port=5001)
+    app.run(host='0.0.0.0', debug=False, port=5001)

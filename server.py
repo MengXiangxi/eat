@@ -120,48 +120,12 @@ def serialize_vendor(row):
     }
 
 
-def serialize_meal(row):
-    return {
-        'id': row['id'],
-        'date': row['date'],
-        'vendor_id': row['vendor_id'],
-        'vendor_name': row['vendor_name'],
-        'order': row['order_text'] or '',
-        'price': row['price'],
-        'rate': row['rate'],
-        'image': row['image'],
-        'include_in_stats': bool(row['include_in_stats']),
-    }
-
-
 def read_vendors():
     with get_conn() as conn:
         rows = conn.execute(
             'SELECT id, vendor, weight FROM vendors ORDER BY id ASC'
         ).fetchall()
     return [serialize_vendor(row) for row in rows]
-
-
-def read_meals():
-    with get_conn() as conn:
-        rows = conn.execute(
-            '''
-            SELECT
-                m.id,
-                m.date,
-                m.vendor_id,
-                v.vendor AS vendor_name,
-                m.order_text,
-                m.price,
-                m.rate,
-                m.image,
-                m.include_in_stats
-            FROM meals AS m
-            LEFT JOIN vendors AS v ON v.id = m.vendor_id
-            ORDER BY m.date DESC, m.id DESC
-            '''
-        ).fetchall()
-    return [serialize_meal(row) for row in rows]
 
 
 @app.route('/')
@@ -307,16 +271,6 @@ def apply_kji_thursday_weight(vendors):
 @app.route('/api/vendors', methods=['GET'])
 def get_vendors():
     return jsonify(apply_kji_thursday_weight(read_vendors()))
-
-
-@app.route('/api/meals', methods=['GET'])
-def get_meals():
-    return jsonify(read_meals())
-
-
-@app.route('/img/<path:filename>')
-def serve_image(filename):
-    return send_from_directory(IMG_DIR, filename)
 
 
 ensure_db()
