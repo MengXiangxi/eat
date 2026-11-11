@@ -422,5 +422,12 @@ class DatabaseTestCase(unittest.TestCase):
             self.assertEqual(next(v['weight'] for v in pub_vendors_mon if v['id'] == k_id), 100)
 
 
+    def test_annual_static_page_and_stats_removed(self):
+        page_res = self.public.get('/annual')
+        self.assertEqual(page_res.status_code, 200)
+        page_res.close()
+        self.assertEqual(self.public.get('/stats').status_code, 404)
+        self.assertEqual(self.public.get('/api/annual').status_code, 404)
+
 if __name__ == '__main__':
     unittest.main(verbosity=2)

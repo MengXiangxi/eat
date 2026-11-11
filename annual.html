@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>吃什么 · 2025–2026 年度统计专题</title>
+<link rel="stylesheet" href="/common.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+  .container {
+    max-width: 1040px;
+    margin: 0 auto;
+    padding-bottom: 40px;
+  }
+
+  /* === Top Bar & Hero === */
+  .top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  .nav-links {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    font-size: 0.92em;
+  }
+
+  .nav-links a {
+    color: var(--color-primary);
+    text-decoration: none;
+    background: var(--bg-card);
+    padding: 7px 14px;
+    border-radius: 999px;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.15s, background 0.15s;
+    font-weight: 500;
+  }
+
+  .nav-links a:hover {
+    background: var(--bg-accent);
+    transform: translateY(-1px);
+  }
+
+  .hero-banner {
+    background: linear-gradient(135deg, #4a6b5a 0%, #6b9080 58%, #8fb5a3 100%);
+    color: #fff;
+    border-radius: var(--radius-lg);
+    padding: 34px 32px 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 28px rgba(74, 107, 90, 0.18);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .hero-banner::after {
+    content: '365';
+    position: absolute;
+    right: 20px;
+    bottom: -18px;
+    font-size: 7.5em;
+    font-weight: 800;
+    color: rgba(255, 255, 255, 0.08);
+    line-height: 1;
+    pointer-events: none;
+    user-select: none;
+  }
+
+  .hero-badge {
+    display: inline-block;
+    background: rgba(255, 255, 255, 0.18);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 0.82em;
+    letter-spacing: 0.04em;
+    margin-bottom: 10px;
+  }
+
+  .hero-banner h1 {
+    color: #fff;
+    text-align: left;
+    font-size: 2.15em;
+    margin-bottom: 8px;
+    letter-spacing: 0.01em;
+  }
+
+  .hero-period {
+    font-size: 0.96em;
+    opacity: 0.9;
+    margin-bottom: 18px;
+  }
+
+  .hero-narrative {
+    background: rgba(255, 255, 255, 0.13);
+    border-left: 3px solid rgba(255, 255, 255, 0.75);
+    padding: 14px 18px;
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 0.95em;
+    line-height: 1.75;
+    backdrop-filter: blur(4px);
+    position: relative;
+    z-index: 1;
+  }
+
+  .hero-narrative strong {
+    color: #fff6d6;
+    font-weight: 700;
+  }
+
+  /* === KPI Overview Grid === */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+
+  .kpi-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 18px 16px;
+    box-shadow: var(--shadow-card);
+    transition: transform 0.2s;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+
+  .kpi-card:hover {
+    transform: translateY(-2px);
+  }
+
+  .kpi-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .kpi-label {
+    font-size: 0.84em;
+    color: var(--color-text-muted);
+    font-weight: 500;
+  }
+
+  .kpi-icon {
+    font-size: 1.15em;
+  }
+
+  .kpi-value {
+    font-size: 1.85em;
+    font-weight: 700;
+    color: var(--color-primary);
+    line-height: 1.2;
+    margin: 4px 0 6px;
+  }
+
+  .kpi-sub {
+    font-size: 0.78em;
+    color: var(--color-text-hint);
+    line-height: 1.4;
+  }
+
+  /* === Milestones / Awards Grid === */
+  .awards-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  .award-card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 20px;
+    box-shadow: var(--shadow-card);
+    border-top: 4px solid var(--color-accent);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .award-card.gold { border-top-color: #d4a55a; }
+  .award-card.warm { border-top-color: #c4956a; }
+  .award-card.sage { border-top-color: #6b9080; }
+  .award-card.slate { border-top-color: #8ba5b5; }
+  .award-card.coral { border-top-color: #c17b6b; }
+
+  .award-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8em;
+    font-weight: 600;
+    color: var(--color-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+
+  .award-title {
+    font-size: 1.28em;
+    font-weight: 700;
+    color: var(--color-text);
+  }
+
+  .award-desc {
+    font-size: 0.84em;
+    color: var(--color-text-muted);
+    line-height: 1.55;
+  }
+
+  /* === Section Cards === */
+  .chart-section {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow-card);
+  }
+
+  .section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .chart-section h2 {
+    font-size: 1.12em;
+    color: var(--color-secondary);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+  }
+
+  .section-sub {
+    font-size: 0.82em;
+    color: var(--color-text-hint);
+  }
+
+  .charts-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .chart-container {
+    position: relative;
+    width: 100%;
+  }
+
+  /* === Calendar Heatmap === */
+  .heatmap-controls {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .mini-btn {
+    border: 1px solid var(--color-border);
+    background: var(--bg-item);
+    color: var(--color-secondary);
+    padding: 4px 10px;
+    border-radius: var(--radius-xs);
+    font-size: 0.8em;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .mini-btn.active {
+    background: var(--color-accent);
+    color: #fff;
+    border-color: var(--color-accent);
+  }
+
+  .heatmap-scroll {
+    overflow-x: auto;
+    padding-bottom: 8px;
+  }
+
+  .heatmap-months {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: 15px;
+    gap: 3px;
+    margin-left: 32px;
+    margin-bottom: 6px;
+    font-size: 0.72em;
+    color: var(--color-text-hint);
+    min-width: 860px;
+  }
+
+  .heatmap-body {
+    display: flex;
+    gap: 6px;
+    min-width: 860px;
+  }
+
+  .heatmap-weekdays {
+    display: grid;
+    grid-template-rows: repeat(7, 15px);
+    gap: 3px;
+    font-size: 0.7em;
+    color: var(--color-text-hint);
+    line-height: 15px;
+    width: 26px;
+    flex-shrink: 0;
+  }
+
+  .heatmap-grid {
+    display: grid;
+    grid-template-rows: repeat(7, 15px);
+    grid-auto-flow: column;
+    grid-auto-columns: 15px;
+    gap: 3px;
+  }
+
+  .hm-cell {
+    width: 15px;
+    height: 15px;
+    border-radius: 3px;
+    background: #ebe9e4;
+    position: relative;
+    cursor: default;
+    transition: transform 0.12s;
+  }
+
+  .hm-cell.has-meal {
+    cursor: pointer;
+  }
+
+  .hm-cell.has-meal:hover {
+    transform: scale(1.28);
+    z-index: 5;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+  }
+
+  .hm-cell.out-range {
+    background: transparent;
+    pointer-events: none;
+  }
+
+  .hm-cell.special-meal::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    right: 2px;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: #fff6d6;
+    box-shadow: 0 0 2px rgba(0,0,0,0.4);
+  }
+
+  .heatmap-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid #f0efe9;
+    font-size: 0.82em;
+    color: var(--color-text-muted);
+  }
+
+  .heatmap-legend {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+    font-size: 0.92em;
+  }
+
+  .legend-swatch {
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    display: inline-block;
+  }
+
+  .heatmap-detail {
+    min-height: 22px;
+    color: var(--color-primary);
+    font-weight: 500;
+  }
+
+  /* === Seasonal Cards === */
+  .season-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  .season-card {
+    background: var(--bg-item);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    border: 1px solid #eceae4;
+  }
+
+  .season-title {
+    font-weight: 700;
+    color: var(--color-primary);
+    font-size: 0.95em;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .season-metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px 10px;
+    font-size: 0.82em;
+    color: var(--color-text-muted);
+  }
+
+  .season-metrics strong {
+    color: var(--color-text);
+  }
+
+  /* === Weekday Table === */
+  .table-scroll {
+    overflow-x: auto;
+    margin-top: 12px;
+  }
+
+  .compact-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84em;
+  }
+
+  .compact-table th,
+  .compact-table td {
+    padding: 8px 8px;
+    text-align: left;
+    border-bottom: 1px solid #f0efe9;
+    white-space: nowrap;
+  }
+
+  .compact-table th {
+    color: var(--color-text-hint);
+    font-weight: 600;
+    font-size: 0.9em;
+  }
+
+  .compact-table tr.highlight-row {
+    background: rgba(196, 149, 106, 0.12);
+    font-weight: 600;
+  }
+
+  /* === Ranking Lists === */
+  .rank-list {
+    list-style: none;
+    padding: 0;
+  }
+
+  .rank-item {
+    display: flex;
+    align-items: center;
+    padding: 9px 10px;
+    border-radius: var(--radius-sm);
+    transition: background 0.15s;
+    gap: 10px;
+  }
+
+  .rank-item:hover { background: var(--bg-muted); }
+
+  .rank-num {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.78em;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+
+  .rank-num.top1 { background: var(--color-gold); color: #fff; }
+  .rank-num.top2 { background: var(--color-silver); color: #fff; }
+  .rank-num.top3 { background: var(--color-bronze); color: #fff; }
+  .rank-num.normal { background: #e8e6e2; color: var(--color-text-muted); }
+
+  .rank-cell {
+    flex: 1.2;
+    position: relative;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .rank-name {
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .badge-status {
+    font-size: 0.7em;
+    padding: 1px 6px;
+    border-radius: 999px;
+    flex-shrink: 0;
+  }
+
+  .badge-active {
+    background: var(--bg-accent);
+    color: var(--color-primary);
+  }
+
+  .badge-retired {
+    background: #eee;
+    color: #999;
+  }
+
+  .rank-bar-wrap {
+    flex: 1.4;
+    height: 6px;
+    background: #edecea;
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .rank-bar {
+    display: block;
+    height: 100%;
+    border-radius: 3px;
+    background: var(--color-accent-bar);
+  }
+
+  .rank-meta {
+    font-size: 0.8em;
+    color: var(--color-text-hint);
+    text-align: right;
+    flex-shrink: 0;
+    min-width: 145px;
+  }
+
+  /* === Exploration Bucket List === */
+  .bucket-list {
+    display: grid;
+    gap: 10px;
+    margin-top: 14px;
+  }
+
+  .bucket-item {
+    background: var(--bg-item);
+    padding: 10px 14px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.86em;
+  }
+
+  .bucket-examples {
+    font-size: 0.82em;
+    color: var(--color-text-hint);
+    margin-top: 2px;
+  }
+
+  /* === Special Moments Section === */
+  .special-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .special-pill {
+    background: var(--bg-item);
+    border: 1px solid #e6e4de;
+    border-radius: var(--radius-sm);
+    padding: 7px 12px;
+    font-size: 0.82em;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .special-pill .sp-date {
+    color: var(--color-text-hint);
+    font-size: 0.9em;
+  }
+
+  .special-pill .sp-vendor {
+    font-weight: 600;
+    color: var(--color-text);
+  }
+
+  .special-pill .sp-meta {
+    color: var(--color-secondary);
+  }
+
+  .footer-note {
+    text-align: center;
+    color: var(--color-text-hint);
+    font-size: 0.82em;
+    margin-top: 28px;
+    line-height: 1.7;
+  }
+
+  @media (max-width: 860px) {
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .awards-grid { grid-template-columns: 1fr; }
+    .charts-row { grid-template-columns: 1fr; }
+    .season-grid { grid-template-columns: 1fr; }
+    .rank-bar-wrap { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Top Navigation -->
+  <div class="top-nav">
+    <div class="nav-links">
+      <a href="/">← 返回首页</a>
+    </div>
+  </div>
+
+  <!-- Hero Banner -->
+  <div class="hero-banner">
+    <div class="hero-badge">🎉 ONE YEAR ANNIVERSARY REPORT</div>
+    <h1>🍽️ 吃什么 · 一周年年度报告</h1>
+    <div class="hero-period" id="heroPeriod">正在加载年度数据…</div>
+    <div class="hero-narrative" id="heroNarrative">正在汇总这一年的干饭足迹…</div>
+  </div>
+
+  <!-- 8 KPI Cards -->
+  <div class="kpi-grid" id="kpiGrid"></div>
+
+  <!-- 6 Annual Awards & Milestones -->
+  <div class="awards-grid" id="awardsGrid"></div>
+
+  <!-- 365-Day Dining Calendar Heatmap -->
+  <div class="chart-section">
+    <div class="section-head">
+      <div>
+        <h2><span>🗓️</span> 年度干饭日历热力图</h2>
+        <div class="section-sub">每一格代表一天 · 右上角带浅色圆点为“不计入日常消费统计”的特别记录（到店/差旅/聚餐）</div>
+      </div>
+      <div class="heatmap-controls">
+        <button class="mini-btn active" id="hmModeRate" onclick="setHeatmapMode('rate')">⭐ 按评分着色</button>
+        <button class="mini-btn" id="hmModePrice" onclick="setHeatmapMode('price')">¥ 按消费着色</button>
+      </div>
+    </div>
+    <div class="heatmap-scroll">
+      <div class="heatmap-months" id="heatmapMonths"></div>
+      <div class="heatmap-body">
+        <div class="heatmap-weekdays">
+          <span>周一</span><span>周二</span><span>周三</span><span>周四</span><span>周五</span><span>周六</span><span>周日</span>
+        </div>
+        <div class="heatmap-grid" id="heatmapGrid"></div>
+      </div>
+    </div>
+    <div class="heatmap-footer">
+      <div class="heatmap-detail" id="heatmapDetail">💡 将鼠标悬停或点击日历方块，查看当日点餐详情</div>
+      <div class="heatmap-legend" id="heatmapLegend"></div>
+    </div>
+  </div>
+
+  <!-- Row 1: Monthly Spending/Count Trend + Monthly New Vendor Discovery -->
+  <div class="charts-row">
+    <div class="chart-section">
+      <div class="section-head">
+        <h2><span>📈</span> 月度消费与频次趋势</h2>
+        <span class="section-sub">仅纳入统计记录</span>
+      </div>
+      <div class="chart-container"><canvas id="monthlyTrendChart"></canvas></div>
+    </div>
+    <div class="chart-section">
+      <div class="section-head">
+        <h2><span>🧭</span> 新店开拓 vs 老店复购节奏</h2>
+        <span class="section-sub">新解锁商家与累计探索曲线</span>
+      </div>
+      <div class="chart-container"><canvas id="discoveryChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Row 2: Weekday Pattern (Crazy Thursday) + Four Seasons Flow -->
+  <div class="charts-row">
+    <div class="chart-section">
+      <div class="section-head">
+        <h2><span>📅</span> 星期干饭规律 · 疯狂星期四透视</h2>
+        <span class="section-sub">周一至周日分布与均价变化</span>
+      </div>
+      <div class="chart-container"><canvas id="weekdayChart"></canvas></div>
+      <div class="table-scroll"><table class="compact-table" id="weekdayTable"></table></div>
+    </div>
+    <div class="chart-section">
+      <div class="section-head">
+        <h2><span>🍂</span> 四季食光流转</h2>
+        <span class="section-sub">冬 · 春 · 夏 · 秋四期对比</span>
+      </div>
+      <div class="chart-container"><canvas id="seasonChart"></canvas></div>
+      <div class="season-grid" id="seasonGrid"></div>
+    </div>
+  </div>
+
+  <!-- Row 3: Exploration Pyramid & Value-vs-Rating Bubble Matrix -->
+  <div class="charts-row">
+    <div class="chart-section">
+      <div class="section-head">
+        <h2><span>🏛️</span> 餐厅复购金字塔</h2>
+        <span class="section-sub">尝鲜过客 vs 核心主力构成</span>
+      </div>
+      <div class="chart-container" style="max-height:220px;display:flex;justify-content:center"><canvas id="pyramidChart"></canvas></div>
+      <div class="bucket-list" id="bucketList"></div>
+    </div>
+    <div class="chart-section">
+      <div class="section-head">
+        <h2><span>🎯</span> 性价比象限（均价 × 评分 × 频次）</h2>
+        <span class="section-sub">打卡 ≥ 2 次且有付费记录的餐厅（气泡大小=次数）</span>
+      </div>
+      <div class="chart-container" style="height:340px"><canvas id="scatterChart"></canvas></div>
+    </div>
+  </div>
+
+  <!-- Full-width: Top 15 Most Visited -->
+  <div class="chart-section">
+    <div class="section-head">
+      <h2><span>🏆</span> 年度打卡次数榜 TOP 15</h2>
+      <span class="section-sub">全量打卡频次与累计金额</span>
+    </div>
+    <ul class="rank-list" id="topVendorsList"></ul>
+  </div>
+
+  <!-- Full-width: Top Rated / C1 Weight Leaderboard -->
+  <div class="chart-section">
+    <div class="section-head">
+      <h2><span>⚖️</span> 口碑榜 & C1 权重生态</h2>
+      <div class="heatmap-controls">
+        <button class="mini-btn active" id="tabBtnRating" onclick="switchRightRankTab('rating')">⭐ 口碑 TOP 10</button>
+        <button class="mini-btn" id="tabBtnC1" onclick="switchRightRankTab('c1')">🔥 现存高权重</button>
+        <button class="mini-btn" id="tabBtnRetired" onclick="switchRightRankTab('retired')">📦 已移出随机池</button>
+      </div>
+    </div>
+    <ul class="rank-list" id="rightRankList"></ul>
+  </div>
+
+  <!-- Special Dining Footprints (include_in_stats = 0) -->
+  <div class="chart-section" id="specialSection">
+    <div class="section-head">
+      <div>
+        <h2><span>✨</span> 特别食光 · 到店、聚餐与远行足迹</h2>
+        <div class="section-sub" id="specialSub">不计入日常午餐消费统计的特别用餐记录</div>
+      </div>
+    </div>
+    <div class="special-tags" id="specialList"></div>
+  </div>
+
+  <div class="footer-note" id="footerNote"></div>
+</div>
+
+<script>
+const annualData = {"calendar":[{"date":"2025-11-10","includeInStats":true,"price":37.0,"rate":1.0,"vendor":"口水鸡"},{"date":"2025-11-11","includeInStats":true,"price":28.0,"rate":4.0,"vendor":"农耕记"},{"date":"2025-11-12","includeInStats":true,"price":36.2,"rate":2.0,"vendor":"上海本帮现炒浇头面（花园桥店）"},{"date":"2025-11-13","includeInStats":true,"price":0.0,"rate":3.0,"vendor":"米村拌饭"},{"date":"2025-11-14","includeInStats":true,"price":0.0,"rate":4.0,"vendor":"火炉火拌饭"},{"date":"2025-11-17","includeInStats":true,"price":43.0,"rate":3.0,"vendor":"松鹤楼"},{"date":"2025-11-18","includeInStats":true,"price":25.0,"rate":3.0,"vendor":"农耕记"},{"date":"2025-11-19","includeInStats":true,"price":37.8,"rate":3.0,"vendor":"Timefor牛排"},{"date":"2025-11-20","includeInStats":true,"price":40.0,"rate":4.0,"vendor":"K记"},{"date":"2025-11-21","includeInStats":true,"price":22.39,"rate":3.0,"vendor":"食堂"},{"date":"2025-11-25","includeInStats":true,"price":19.83,"rate":3.0,"vendor":"食堂"},{"date":"2025-11-27","includeInStats":false,"price":0.0,"rate":3.0,"vendor":"艺园二楼"},{"date":"2025-11-28","includeInStats":false,"price":16.27,"rate":3.0,"vendor":"松荣鮨（嘉定日月光）"},{"date":"2025-12-01","includeInStats":true,"price":20.0,"rate":3.0,"vendor":"食堂"},{"date":"2025-12-02","includeInStats":true,"price":23.61,"rate":3.0,"vendor":"食堂"},{"date":"2025-12-03","includeInStats":true,"price":24.78,"rate":3.0,"vendor":"食堂"},{"date":"2025-12-04","includeInStats":true,"price":20.0,"rate":3.0,"vendor":"食堂-餐车"},{"date":"2025-12-05","includeInStats":true,"price":18.0,"rate":3.0,"vendor":"食堂"},{"date":"2025-12-08","includeInStats":true,"price":19.08,"rate":3.0,"vendor":"鸭血粉丝汤"},{"date":"2025-12-09","includeInStats":true,"price":0.0,"rate":4.0,"vendor":"必胜客"},{"date":"2025-12-10","includeInStats":true,"price":29.6,"rate":4.0,"vendor":"咖喱饭"},{"date":"2025-12-11","includeInStats":true,"price":24.0,"rate":3.0,"vendor":"K记"},{"date":"2025-12-12","includeInStats":true,"price":11.5,"rate":3.0,"vendor":"炒饼老头儿"},{"date":"2025-12-15","includeInStats":true,"price":25.0,"rate":4.0,"vendor":"一家低脂的茶香牛肉饭"},{"date":"2025-12-16","includeInStats":true,"price":22.5,"rate":3.5,"vendor":"紫光园"},{"date":"2025-12-17","includeInStats":false,"price":0.0,"rate":2.5,"vendor":"家园食堂"},{"date":"2025-12-18","includeInStats":true,"price":22.0,"rate":3.5,"vendor":"黄焖鸡米饭"},{"date":"2025-12-19","includeInStats":true,"price":26.0,"rate":4.0,"vendor":"麻辣拌"},{"date":"2025-12-22","includeInStats":true,"price":0.0,"rate":2.5,"vendor":"兰轩"},{"date":"2025-12-23","includeInStats":true,"price":0.0,"rate":3.0,"vendor":"水果酸奶"},{"date":"2025-12-24","includeInStats":false,"price":43.5,"rate":3.5,"vendor":"阿森烤翅"},{"date":"2025-12-25","includeInStats":true,"price":25.0,"rate":3.0,"vendor":"食堂"},{"date":"2025-12-26","includeInStats":true,"price":0.0,"rate":3.0,"vendor":"外婆家"},{"date":"2025-12-29","includeInStats":true,"price":19.21,"rate":3.0,"vendor":"食堂"},{"date":"2025-12-30","includeInStats":true,"price":23.0,"rate":3.0,"vendor":"食堂"},{"date":"2025-12-31","includeInStats":true,"price":36.8,"rate":4.5,"vendor":"子午路张记肉夹馍"},{"date":"2026-01-04","includeInStats":true,"price":18.83,"rate":3.0,"vendor":"食堂"},{"date":"2026-01-05","includeInStats":true,"price":28.9,"rate":2.0,"vendor":"外婆家"},{"date":"2026-01-06","includeInStats":true,"price":27.9,"rate":2.0,"vendor":"农耕记"},{"date":"2026-01-07","includeInStats":true,"price":0.0,"rate":3.5,"vendor":"K记"},{"date":"2026-01-08","includeInStats":true,"price":25.0,"rate":3.5,"vendor":"紫光园"},{"date":"2026-01-09","includeInStats":true,"price":23.0,"rate":4.0,"vendor":"子午路张记肉夹馍"},{"date":"2026-01-12","includeInStats":true,"price":25.0,"rate":3.0,"vendor":"一家低脂的茶香牛肉饭"},{"date":"2026-01-13","includeInStats":true,"price":29.9,"rate":3.5,"vendor":"咖喱饭"},{"date":"2026-01-14","includeInStats":true,"price":24.0,"rate":4.5,"vendor":"魏家凉皮"},{"date":"2026-01-15","includeInStats":true,"price":29.8,"rate":4.0,"vendor":"米村拌饭"},{"date":"2026-01-16","includeInStats":true,"price":37.0,"rate":3.5,"vendor":"郁陵岛"},{"date":"2026-01-19","includeInStats":true,"price":22.0,"rate":3.5,"vendor":"食堂"},{"date":"2026-01-20","includeInStats":true,"price":18.0,"rate":3.0,"vendor":"食堂"},{"date":"2026-01-21","includeInStats":true,"price":9.0,"rate":2.5,"vendor":"食堂"},{"date":"2026-01-22","includeInStats":true,"price":27.86,"rate":3.0,"vendor":"食堂"},{"date":"2026-01-23","includeInStats":true,"price":20.28,"rate":3.5,"vendor":"麻辣拌"},{"date":"2026-01-26","includeInStats":false,"price":6.0,"rate":4.0,"vendor":"双皮奶"},{"date":"2026-01-27","includeInStats":false,"price":0.0,"rate":3.5,"vendor":"煲仔饭"},{"date":"2026-01-28","includeInStats":true,"price":33.9,"rate":3.5,"vendor":"八合里"},{"date":"2026-01-29","includeInStats":true,"price":22.74,"rate":3.0,"vendor":"食堂"},{"date":"2026-01-30","includeInStats":true,"price":19.0,"rate":3.0,"vendor":"食堂"},{"date":"2026-02-02","includeInStats":true,"price":25.8,"rate":4.0,"vendor":"麻辣拌"},{"date":"2026-02-03","includeInStats":true,"price":8.5,"rate":2.0,"vendor":"包子"},{"date":"2026-02-04","includeInStats":true,"price":28.85,"rate":3.5,"vendor":"超级碗"},{"date":"2026-02-05","includeInStats":true,"price":36.33,"rate":2.0,"vendor":"K记"},{"date":"2026-02-06","includeInStats":true,"price":0.0,"rate":4.0,"vendor":"眉州东坡"},{"date":"2026-02-09","includeInStats":true,"price":0.0,"rate":4.0,"vendor":"必胜客"},{"date":"2026-02-10","includeInStats":false,"price":96.77,"rate":4.5,"vendor":"朱记乳鸽王"},{"date":"2026-02-11","includeInStats":true,"price":28.0,"rate":2.0,"vendor":"兰轩"},{"date":"2026-02-12","includeInStats":true,"price":25.0,"rate":2.5,"vendor":"兰轩"},{"date":"2026-02-24","includeInStats":true,"price":24.8,"rate":4.0,"vendor":"西北站・全羊"},{"date":"2026-02-25","includeInStats":true,"price":23.8,"rate":3.5,"vendor":"一家低脂的茶香牛肉饭"},{"date":"2026-02-27","includeInStats":true,"price":0.0,"rate":0.5,"vendor":"汉堡王"},{"date":"2026-02-28","includeInStats":true,"price":25.9,"rate":4.0,"vendor":"青年星厨"},{"date":"2026-03-02","includeInStats":true,"price":25.8,"rate":3.5,"vendor":"跷脚牛肉"},{"date":"2026-03-03","includeInStats":false,"price":0.0,"rate":4.5,"vendor":"荣豫河南菜"},{"date":"2026-03-04","includeInStats":true,"price":25.9,"rate":4.0,"vendor":"咖喱饭"},{"date":"2026-03-05","includeInStats":true,"price":34.5,"rate":2.0,"vendor":"K记"},{"date":"2026-03-06","includeInStats":true,"price":23.9,"rate":3.0,"vendor":"湘圣"},{"date":"2026-03-09","includeInStats":true,"price":26.9,"rate":3.0,"vendor":"眉州东坡"},{"date":"2026-03-10","includeInStats":true,"price":23.1,"rate":3.0,"vendor":"老边饺子"},{"date":"2026-03-11","includeInStats":true,"price":18.8,"rate":4.5,"vendor":"猪脚饭"},{"date":"2026-03-12","includeInStats":true,"price":24.0,"rate":4.0,"vendor":"老广烧腊"},{"date":"2026-03-13","includeInStats":true,"price":0.0,"rate":3.5,"vendor":"米村拌饭"},{"date":"2026-03-16","includeInStats":true,"price":25.2,"rate":2.5,"vendor":"卤肉饭"},{"date":"2026-03-17","includeInStats":true,"price":30.8,"rate":3.0,"vendor":"德克士"},{"date":"2026-03-18","includeInStats":true,"price":0.0,"rate":3.5,"vendor":"农耕记"},{"date":"2026-03-19","includeInStats":true,"price":38.0,"rate":4.0,"vendor":"K记"},{"date":"2026-03-20","includeInStats":true,"price":25.5,"rate":4.0,"vendor":"郁陵岛"},{"date":"2026-03-23","includeInStats":true,"price":8.0,"rate":2.0,"vendor":"包子"},{"date":"2026-03-24","includeInStats":false,"price":0.0,"rate":4.0,"vendor":"静一餐厅"},{"date":"2026-03-25","includeInStats":true,"price":0.0,"rate":3.0,"vendor":"必胜客"},{"date":"2026-03-26","includeInStats":true,"price":29.0,"rate":4.0,"vendor":"魏家凉皮"},{"date":"2026-03-27","includeInStats":false,"price":134.0,"rate":5.0,"vendor":"椰林海鲜码头"},{"date":"2026-03-30","includeInStats":true,"price":12.45,"rate":2.5,"vendor":"食堂"},{"date":"2026-04-01","includeInStats":true,"price":25.0,"rate":3.5,"vendor":"麻辣香锅"},{"date":"2026-04-02","includeInStats":true,"price":22.59,"rate":3.0,"vendor":"食堂"},{"date":"2026-04-07","includeInStats":true,"price":26.5,"rate":3.5,"vendor":"老边饺子"},{"date":"2026-04-08","includeInStats":true,"price":15.0,"rate":2.0,"vendor":"食堂"},{"date":"2026-04-09","includeInStats":true,"price":27.0,"rate":4.0,"vendor":"超级碗"},{"date":"2026-04-13","includeInStats":false,"price":46.0,"rate":4.5,"vendor":"福和面馆"},{"date":"2026-04-14","includeInStats":true,"price":24.0,"rate":2.0,"vendor":"韩式烤肉拌饭"},{"date":"2026-04-15","includeInStats":true,"price":28.0,"rate":3.5,"vendor":"嫩牛家"},{"date":"2026-04-16","includeInStats":true,"price":36.0,"rate":2.0,"vendor":"K记"},{"date":"2026-04-17","includeInStats":true,"price":22.0,"rate":3.5,"vendor":"农耕记"},{"date":"2026-04-20","includeInStats":true,"price":24.0,"rate":3.0,"vendor":"甲乙饼"},{"date":"2026-04-21","includeInStats":true,"price":29.2,"rate":3.0,"vendor":"武圣羊汤"},{"date":"2026-04-22","includeInStats":true,"price":26.0,"rate":3.5,"vendor":"金手勺"},{"date":"2026-04-23","includeInStats":true,"price":24.8,"rate":4.0,"vendor":"滕州菜煎饼"},{"date":"2026-04-24","includeInStats":true,"price":25.0,"rate":4.5,"vendor":"老广烧腊"},{"date":"2026-04-27","includeInStats":true,"price":19.0,"rate":2.5,"vendor":"一家低脂的茶香牛肉饭"},{"date":"2026-04-28","includeInStats":true,"price":25.0,"rate":3.0,"vendor":"嫩牛家"},{"date":"2026-04-29","includeInStats":true,"price":23.0,"rate":3.0,"vendor":"甲乙饼"},{"date":"2026-04-30","includeInStats":false,"price":0.0,"rate":4.0,"vendor":"滕州菜煎饼"},{"date":"2026-05-06","includeInStats":true,"price":24.0,"rate":3.0,"vendor":"甲乙饼"},{"date":"2026-05-07","includeInStats":true,"price":24.0,"rate":3.5,"vendor":"子午路张记肉夹馍"},{"date":"2026-05-08","includeInStats":true,"price":34.0,"rate":4.0,"vendor":"松鹤楼"},{"date":"2026-05-09","includeInStats":true,"price":25.2,"rate":3.0,"vendor":"紫光园"},{"date":"2026-05-11","includeInStats":true,"price":35.0,"rate":4.5,"vendor":"祥隆餐厅"},{"date":"2026-05-12","includeInStats":true,"price":20.0,"rate":4.0,"vendor":"湘圣"},{"date":"2026-05-13","includeInStats":true,"price":27.0,"rate":3.5,"vendor":"眉州东坡"},{"date":"2026-05-14","includeInStats":true,"price":31.0,"rate":3.0,"vendor":"麻辣拌"},{"date":"2026-05-15","includeInStats":true,"price":27.0,"rate":4.0,"vendor":"鸭血粉丝汤"},{"date":"2026-05-18","includeInStats":true,"price":27.0,"rate":3.0,"vendor":"外婆家"},{"date":"2026-05-19","includeInStats":false,"price":0.0,"rate":4.0,"vendor":"艺园二楼"},{"date":"2026-05-20","includeInStats":true,"price":25.85,"rate":4.0,"vendor":"西北站・全羊"},{"date":"2026-05-21","includeInStats":true,"price":27.0,"rate":4.0,"vendor":"K记"},{"date":"2026-05-22","includeInStats":true,"price":0.0,"rate":3.0,"vendor":"兰轩"},{"date":"2026-05-25","includeInStats":true,"price":26.0,"rate":3.5,"vendor":"德克士"},{"date":"2026-05-26","includeInStats":true,"price":30.0,"rate":4.0,"vendor":"卤肉饭"},{"date":"2026-05-27","includeInStats":true,"price":21.34,"rate":2.0,"vendor":"食堂"},{"date":"2026-05-28","includeInStats":true,"price":22.53,"rate":2.5,"vendor":"食堂"},{"date":"2026-05-29","includeInStats":true,"price":25.0,"rate":2.0,"vendor":"兰轩"},{"date":"2026-06-01","includeInStats":false,"price":43.5,"rate":4.0,"vendor":"利桥顺酒楼"},{"date":"2026-06-02","includeInStats":true,"price":25.0,"rate":5.0,"vendor":"大鸭梨"},{"date":"2026-06-03","includeInStats":true,"price":27.3,"rate":3.0,"vendor":"嫩牛家"},{"date":"2026-06-04","includeInStats":true,"price":35.0,"rate":4.5,"vendor":"祥隆餐厅"},{"date":"2026-06-05","includeInStats":true,"price":25.0,"rate":5.0,"vendor":"大鸭梨"},{"date":"2026-06-08","includeInStats":true,"price":23.5,"rate":4.5,"vendor":"老广烧腊"},{"date":"2026-06-09","includeInStats":true,"price":20.5,"rate":4.0,"vendor":"食堂"},{"date":"2026-06-10","includeInStats":true,"price":26.0,"rate":3.5,"vendor":"武圣羊汤"},{"date":"2026-06-11","includeInStats":true,"price":39.3,"rate":2.5,"vendor":"德克士"},{"date":"2026-06-12","includeInStats":true,"price":32.0,"rate":3.0,"vendor":"松鹤楼"},{"date":"2026-06-15","includeInStats":true,"price":27.0,"rate":3.5,"vendor":"黄焖鸡米饭"},{"date":"2026-06-16","includeInStats":true,"price":25.5,"rate":4.0,"vendor":"卤肉饭"},{"date":"2026-06-17","includeInStats":true,"price":25.0,"rate":3.5,"vendor":"农耕记"},{"date":"2026-06-18","includeInStats":true,"price":34.65,"rate":3.5,"vendor":"K记"},{"date":"2026-06-22","includeInStats":true,"price":31.9,"rate":3.5,"vendor":"卤肉饭"},{"date":"2026-06-23","includeInStats":true,"price":25.0,"rate":4.0,"vendor":"麻辣香锅"},{"date":"2026-06-24","includeInStats":true,"price":32.0,"rate":4.0,"vendor":"野鸡枞"},{"date":"2026-06-25","includeInStats":true,"price":27.0,"rate":3.0,"vendor":"米村拌饭"},{"date":"2026-06-26","includeInStats":true,"price":22.5,"rate":3.0,"vendor":"南昌拌粉"},{"date":"2026-06-29","includeInStats":true,"price":39.0,"rate":2.5,"vendor":"吉野家"},{"date":"2026-06-30","includeInStats":false,"price":17.1,"rate":3.5,"vendor":"燕南食堂"},{"date":"2026-07-02","includeInStats":true,"price":0.0,"rate":3.0,"vendor":"兰轩"},{"date":"2026-07-03","includeInStats":true,"price":28.0,"rate":3.0,"vendor":"西贝"},{"date":"2026-07-06","includeInStats":true,"price":25.0,"rate":4.5,"vendor":"大鸭梨"},{"date":"2026-07-07","includeInStats":true,"price":26.0,"rate":3.5,"vendor":"塔斯汀"},{"date":"2026-07-08","includeInStats":true,"price":26.5,"rate":4.0,"vendor":"青年星厨"},{"date":"2026-07-09","includeInStats":true,"price":27.5,"rate":3.5,"vendor":"K记"},{"date":"2026-07-10","includeInStats":true,"price":19.0,"rate":3.5,"vendor":"湘圣"},{"date":"2026-07-13","includeInStats":true,"price":30.0,"rate":4.0,"vendor":"必胜客"},{"date":"2026-07-14","includeInStats":true,"price":37.0,"rate":3.0,"vendor":"新紮师兄冰室"},{"date":"2026-07-15","includeInStats":true,"price":31.0,"rate":4.5,"vendor":"子午路张记肉夹馍"},{"date":"2026-07-17","includeInStats":true,"price":33.67,"rate":3.5,"vendor":"K记"},{"date":"2026-07-20","includeInStats":true,"price":27.0,"rate":4.0,"vendor":"祥隆餐厅"},{"date":"2026-07-21","includeInStats":true,"price":25.0,"rate":4.5,"vendor":"金手勺"},{"date":"2026-07-22","includeInStats":true,"price":28.5,"rate":4.0,"vendor":"青年星厨"},{"date":"2026-07-30","includeInStats":true,"price":20.0,"rate":3.0,"vendor":"甲乙饼"},{"date":"2026-07-31","includeInStats":true,"price":24.0,"rate":3.5,"vendor":"金手勺"},{"date":"2026-08-04","includeInStats":true,"price":24.0,"rate":3.0,"vendor":"魏家凉皮"},{"date":"2026-08-05","includeInStats":true,"price":20.0,"rate":3.5,"vendor":"食堂"},{"date":"2026-08-06","includeInStats":true,"price":29.0,"rate":4.0,"vendor":"K记"},{"date":"2026-08-07","includeInStats":true,"price":30.0,"rate":1.5,"vendor":"跷脚牛肉"},{"date":"2026-08-10","includeInStats":true,"price":24.0,"rate":3.5,"vendor":"咖喱饭"},{"date":"2026-08-11","includeInStats":true,"price":29.8,"rate":3.0,"vendor":"嫩牛家"},{"date":"2026-08-12","includeInStats":true,"price":30.0,"rate":4.0,"vendor":"必胜客"},{"date":"2026-08-13","includeInStats":true,"price":0.0,"rate":3.5,"vendor":"兰轩"},{"date":"2026-08-14","includeInStats":true,"price":26.0,"rate":4.0,"vendor":"成都小吃"},{"date":"2026-08-17","includeInStats":true,"price":30.22,"rate":3.0,"vendor":"食堂"},{"date":"2026-08-18","includeInStats":true,"price":33.5,"rate":4.5,"vendor":"净香居"},{"date":"2026-08-19","includeInStats":true,"price":30.0,"rate":4.5,"vendor":"子午路张记肉夹馍"},{"date":"2026-08-20","includeInStats":true,"price":31.0,"rate":3.5,"vendor":"K记"},{"date":"2026-08-21","includeInStats":true,"price":0.0,"rate":4.0,"vendor":"盒饭"},{"date":"2026-08-24","includeInStats":true,"price":35.0,"rate":4.0,"vendor":"鳗鱼饭"},{"date":"2026-08-25","includeInStats":true,"price":25.0,"rate":4.5,"vendor":"大鸭梨"},{"date":"2026-08-26","includeInStats":false,"price":32.0,"rate":2.0,"vendor":"兰轩"},{"date":"2026-08-27","includeInStats":true,"price":34.5,"rate":3.0,"vendor":"杏花堂"},{"date":"2026-08-28","includeInStats":true,"price":30.0,"rate":3.0,"vendor":"嫩牛家"},{"date":"2026-08-31","includeInStats":true,"price":26.5,"rate":3.5,"vendor":"紫燕百味鸡"},{"date":"2026-09-02","includeInStats":true,"price":27.0,"rate":3.5,"vendor":"塔斯汀"},{"date":"2026-09-03","includeInStats":true,"price":22.0,"rate":2.5,"vendor":"麻辣拌"},{"date":"2026-09-04","includeInStats":true,"price":25.0,"rate":2.0,"vendor":"凉皮肉夹馍"},{"date":"2026-09-07","includeInStats":true,"price":31.0,"rate":4.5,"vendor":"眉州东坡"},{"date":"2026-09-08","includeInStats":true,"price":21.0,"rate":2.0,"vendor":"食堂"},{"date":"2026-09-09","includeInStats":true,"price":31.9,"rate":4.0,"vendor":"子午路张记肉夹馍"},{"date":"2026-09-11","includeInStats":true,"price":32.0,"rate":4.0,"vendor":"海底捞"},{"date":"2026-09-15","includeInStats":true,"price":34.0,"rate":3.5,"vendor":"卤肉饭"},{"date":"2026-09-16","includeInStats":true,"price":21.5,"rate":3.0,"vendor":"魏家凉皮"},{"date":"2026-09-17","includeInStats":true,"price":35.0,"rate":3.5,"vendor":"K记"},{"date":"2026-09-18","includeInStats":false,"price":0.0,"rate":3.5,"vendor":"南方航空飞机餐"},{"date":"2026-09-19","includeInStats":false,"price":41.7,"rate":3.5,"vendor":"油淋鸡"},{"date":"2026-09-20","includeInStats":false,"price":94.56,"rate":4.5,"vendor":"池袋沸腾小吃城"},{"date":"2026-09-21","includeInStats":false,"price":52.13,"rate":1.5,"vendor":"駅弁屋"},{"date":"2026-09-22","includeInStats":false,"price":53.19,"rate":4.0,"vendor":"江戸清肉まん"},{"date":"2026-09-23","includeInStats":false,"price":69.58,"rate":4.5,"vendor":"喜多方拉面"},{"date":"2026-09-24","includeInStats":true,"price":25.69,"rate":2.0,"vendor":"食堂"},{"date":"2026-09-28","includeInStats":true,"price":26.0,"rate":4.5,"vendor":"猪脚饭"},{"date":"2026-09-29","includeInStats":true,"price":28.0,"rate":4.0,"vendor":"超级碗"},{"date":"2026-09-30","includeInStats":true,"price":25.5,"rate":3.5,"vendor":"麻辣香锅"},{"date":"2026-10-08","includeInStats":true,"price":28.5,"rate":4.0,"vendor":"超级碗"},{"date":"2026-10-09","includeInStats":false,"price":0.0,"rate":4.5,"vendor":"太二酸菜鱼"},{"date":"2026-10-10","includeInStats":true,"price":28.5,"rate":3.0,"vendor":"超级碗"},{"date":"2026-10-12","includeInStats":true,"price":27.0,"rate":4.5,"vendor":"野鸡枞"},{"date":"2026-10-13","includeInStats":true,"price":28.9,"rate":3.5,"vendor":"净香居"},{"date":"2026-10-14","includeInStats":true,"price":35.0,"rate":4.0,"vendor":"净香居"},{"date":"2026-10-15","includeInStats":true,"price":31.2,"rate":4.0,"vendor":"超级碗"},{"date":"2026-10-26","includeInStats":true,"price":23.0,"rate":3.5,"vendor":"老边饺子"},{"date":"2026-10-27","includeInStats":true,"price":26.0,"rate":4.0,"vendor":"麻辣拌"},{"date":"2026-10-28","includeInStats":false,"price":0.0,"rate":3.0,"vendor":"屯里情人民公社铁锅炖（雁栖湖店）"},{"date":"2026-10-29","includeInStats":true,"price":25.0,"rate":4.0,"vendor":"大油边拌饭"},{"date":"2026-10-30","includeInStats":false,"price":66.0,"rate":4.5,"vendor":"江南古镇味道"},{"date":"2026-11-02","includeInStats":true,"price":18.0,"rate":4.5,"vendor":"金手勺"},{"date":"2026-11-03","includeInStats":true,"price":24.5,"rate":4.0,"vendor":"云阿蛮牛肉米线"},{"date":"2026-11-04","includeInStats":false,"price":30.1,"rate":3.5,"vendor":"超级碗"},{"date":"2026-11-05","includeInStats":true,"price":48.0,"rate":4.0,"vendor":"K记"},{"date":"2026-11-06","includeInStats":false,"price":67.0,"rate":5.0,"vendor":"王繁星面馆"},{"date":"2026-11-09","includeInStats":true,"price":22.0,"rate":2.0,"vendor":"农耕记"}],"exploration":{"c1TopVendors":[{"avgPrice":25.0,"avgRating":4.8,"avgRating2":4.75,"count":4,"firstDate":"2026-06-02","fiveStarCount":2,"lastDate":"2026-08-25","statCount":4,"statTotal":100.0,"total":100.0,"vendor":"大鸭梨","weight":120},{"avgPrice":46.0,"avgRating":4.5,"avgRating2":4.5,"count":1,"firstDate":"2026-04-13","fiveStarCount":0,"lastDate":"2026-04-13","statCount":0,"statTotal":0.0,"total":46.0,"vendor":"福和面馆","weight":115},{"avgPrice":35.0,"avgRating":4.0,"avgRating2":4.0,"count":1,"firstDate":"2026-08-24","fiveStarCount":0,"lastDate":"2026-08-24","statCount":1,"statTotal":35.0,"total":35.0,"vendor":"鳗鱼饭","weight":110},{"avgPrice":32.0,"avgRating":4.0,"avgRating2":4.0,"count":1,"firstDate":"2026-09-11","fiveStarCount":0,"lastDate":"2026-09-11","statCount":1,"statTotal":32.0,"total":32.0,"vendor":"海底捞","weight":110},{"avgPrice":25.0,"avgRating":4.0,"avgRating2":4.0,"count":1,"firstDate":"2026-10-29","fiveStarCount":0,"lastDate":"2026-10-29","statCount":1,"statTotal":25.0,"total":25.0,"vendor":"大油边拌饭","weight":110},{"avgPrice":24.5,"avgRating":4.0,"avgRating2":4.0,"count":1,"firstDate":"2026-11-03","fiveStarCount":0,"lastDate":"2026-11-03","statCount":1,"statTotal":24.5,"total":24.5,"vendor":"云阿蛮牛肉米线","weight":110},{"avgPrice":22.4,"avgRating":4.5,"avgRating2":4.5,"count":2,"firstDate":"2026-03-11","fiveStarCount":0,"lastDate":"2026-09-28","statCount":2,"statTotal":44.8,"total":44.8,"vendor":"猪脚饭","weight":106},{"avgPrice":26.5,"avgRating":3.5,"avgRating2":3.5,"count":1,"firstDate":"2026-08-31","fiveStarCount":0,"lastDate":"2026-08-31","statCount":1,"statTotal":26.5,"total":26.5,"vendor":"紫燕百味鸡","weight":105},{"avgPrice":29.5,"avgRating":4.2,"avgRating2":4.25,"count":2,"firstDate":"2026-06-24","fiveStarCount":0,"lastDate":"2026-10-12","statCount":2,"statTotal":59.0,"total":59.0,"vendor":"野鸡枞","weight":102},{"avgPrice":11.5,"avgRating":3.0,"avgRating2":3.0,"count":1,"firstDate":"2025-12-12","fiveStarCount":0,"lastDate":"2025-12-12","statCount":1,"statTotal":11.5,"total":11.5,"vendor":"炒饼老头儿","weight":100}],"frequencyBuckets":[{"examples":["椰林海鲜码头","王繁星面馆","朱记乳鸽王","荣豫河南菜"],"label":"1次 · 尝鲜过客","mealCount":45,"vendorCount":45},{"examples":["老广烧腊","祥隆餐厅","青年星厨","净香居"],"label":"2–3次 · 回头客","mealCount":57,"vendorCount":23},{"examples":["超级碗","农耕记","子午路张记肉夹馍","麻辣拌"],"label":"4–7次 · 高频常客","mealCount":73,"vendorCount":15},{"examples":["食堂","K记","兰轩"],"label":"8次+ · 干饭主力","mealCount":49,"vendorCount":3}],"retiredVendors":[{"avgPrice":20.95,"avgRating":2.9,"avgRating2":2.87,"count":26,"firstDate":"2025-11-21","fiveStarCount":0,"lastDate":"2026-09-24","statCount":26,"statTotal":544.57,"total":544.57,"vendor":"食堂","weight":0},{"avgPrice":27.5,"avgRating":2.6,"avgRating2":2.56,"count":8,"firstDate":"2025-12-22","fiveStarCount":0,"lastDate":"2026-08-26","statCount":7,"statTotal":78.0,"total":110.0,"vendor":"兰轩","weight":0},{"avgPrice":8.25,"avgRating":2.0,"avgRating2":2.0,"count":2,"firstDate":"2026-02-03","fiveStarCount":0,"lastDate":"2026-03-23","statCount":2,"statTotal":16.5,"total":16.5,"vendor":"包子","weight":0},{"avgPrice":null,"avgRating":3.5,"avgRating2":3.5,"count":2,"firstDate":"2025-11-27","fiveStarCount":0,"lastDate":"2026-05-19","statCount":0,"statTotal":0.0,"total":0.0,"vendor":"艺园二楼","weight":0},{"avgPrice":24.8,"avgRating":4.0,"avgRating2":4.0,"count":2,"firstDate":"2026-04-23","fiveStarCount":0,"lastDate":"2026-04-30","statCount":1,"statTotal":24.8,"total":24.8,"vendor":"滕州菜煎饼","weight":0},{"avgPrice":null,"avgRating":0.5,"avgRating2":0.5,"count":1,"firstDate":"2026-02-27","fiveStarCount":0,"lastDate":"2026-02-27","statCount":1,"statTotal":0.0,"total":0.0,"vendor":"汉堡王","weight":0},{"avgPrice":37.0,"avgRating":1.0,"avgRating2":1.0,"count":1,"firstDate":"2025-11-10","fiveStarCount":0,"lastDate":"2025-11-10","statCount":1,"statTotal":37.0,"total":37.0,"vendor":"口水鸡","weight":0},{"avgPrice":52.13,"avgRating":1.5,"avgRating2":1.5,"count":1,"firstDate":"2026-09-21","fiveStarCount":0,"lastDate":"2026-09-21","statCount":0,"statTotal":0.0,"total":52.13,"vendor":"駅弁屋","weight":0},{"avgPrice":36.2,"avgRating":2.0,"avgRating2":2.0,"count":1,"firstDate":"2025-11-12","fiveStarCount":0,"lastDate":"2025-11-12","statCount":1,"statTotal":36.2,"total":36.2,"vendor":"上海本帮现炒浇头面（花园桥店）","weight":0},{"avgPrice":25.0,"avgRating":2.0,"avgRating2":2.0,"count":1,"firstDate":"2026-09-04","fiveStarCount":0,"lastDate":"2026-09-04","statCount":1,"statTotal":25.0,"total":25.0,"vendor":"凉皮肉夹馍","weight":0}]},"highlights":{"bestRatedRegular":{"avgPrice":25.0,"avgRating":4.8,"avgRating2":4.75,"count":4,"firstDate":"2026-06-02","fiveStarCount":2,"lastDate":"2026-08-25","statCount":4,"statTotal":100.0,"total":100.0,"vendor":"大鸭梨","weight":120},"bestValueRegular":{"avgPrice":23.25,"avgRating":4.0,"avgRating2":4.0,"count":4,"firstDate":"2026-04-22","fiveStarCount":0,"lastDate":"2026-11-02","statCount":4,"statTotal":93.0,"total":93.0,"vendor":"金手勺","weight":89},"firstMeal":{"date":"2025-11-10","includeInStats":true,"price":37.0,"rate":1.0,"vendor":"口水鸡"},"fiveStarMeals":[{"date":"2026-03-27","includeInStats":false,"price":134.0,"rate":5.0,"vendor":"椰林海鲜码头"},{"date":"2026-06-02","includeInStats":true,"price":25.0,"rate":5.0,"vendor":"大鸭梨"},{"date":"2026-06-05","includeInStats":true,"price":25.0,"rate":5.0,"vendor":"大鸭梨"},{"date":"2026-11-06","includeInStats":false,"price":67.0,"rate":5.0,"vendor":"王繁星面馆"}],"highestAllMeal":{"date":"2026-03-27","includeInStats":false,"price":134.0,"rate":5.0,"vendor":"椰林海鲜码头"},"highestStatMeal":{"date":"2026-11-05","includeInStats":true,"price":48.0,"rate":4.0,"vendor":"K记"},"lastMeal":{"date":"2026-11-09","includeInStats":true,"price":22.0,"rate":2.0,"vendor":"农耕记"},"lowRatedMeals":[{"date":"2026-02-27","includeInStats":true,"price":0.0,"rate":0.5,"vendor":"汉堡王"},{"date":"2025-11-10","includeInStats":true,"price":37.0,"rate":1.0,"vendor":"口水鸡"},{"date":"2026-08-07","includeInStats":true,"price":30.0,"rate":1.5,"vendor":"跷脚牛肉"},{"date":"2026-09-21","includeInStats":false,"price":52.13,"rate":1.5,"vendor":"駅弁屋"}],"lowestPaidStatMeal":{"date":"2026-03-23","includeInStats":true,"price":8.0,"rate":2.0,"vendor":"包子"},"mostVisited":{"avgPrice":20.95,"avgRating":2.9,"avgRating2":2.87,"count":26,"firstDate":"2025-11-21","fiveStarCount":0,"lastDate":"2026-09-24","statCount":26,"statTotal":544.57,"total":544.57,"vendor":"食堂","weight":0},"mostVisitedExternal":{"avgPrice":33.9,"avgRating":3.3,"avgRating2":3.33,"count":15,"firstDate":"2025-11-20","fiveStarCount":0,"lastDate":"2026-11-05","statCount":15,"statTotal":474.65,"total":474.65,"vendor":"K记","weight":36}},"monthly":[{"allCount":13,"avgPrice":32.14,"avgRating":3.0,"count":11,"cumulativeVendors":11,"label":"2025-11","month":"2511","newVendors":11,"repeatMeals":2,"total":289.22},{"allCount":23,"avgPrice":22.95,"avgRating":3.26,"count":21,"cumulativeVendors":26,"label":"2025-12","month":"2512","newVendors":15,"repeatMeals":8,"total":390.08},{"allCount":21,"avgPrice":24.56,"avgRating":3.29,"count":19,"cumulativeVendors":31,"label":"2026-01","month":"2601","newVendors":5,"repeatMeals":16,"total":442.11},{"allCount":13,"avgPrice":25.22,"avgRating":3.12,"count":12,"cumulativeVendors":38,"label":"2026-02","month":"2602","newVendors":7,"repeatMeals":6,"total":226.98},{"allCount":21,"avgPrice":24.79,"avgRating":3.45,"count":18,"cumulativeVendors":48,"label":"2026-03","month":"2603","newVendors":10,"repeatMeals":11,"total":371.85},{"allCount":19,"avgPrice":24.83,"avgRating":3.26,"count":17,"cumulativeVendors":56,"label":"2026-04","month":"2604","newVendors":8,"repeatMeals":11,"total":422.09},{"allCount":19,"avgPrice":26.58,"avgRating":3.39,"count":18,"cumulativeVendors":57,"label":"2026-05","month":"2605","newVendors":1,"repeatMeals":18,"total":451.92},{"allCount":21,"avgPrice":28.59,"avgRating":3.67,"count":19,"cumulativeVendors":63,"label":"2026-06","month":"2606","newVendors":6,"repeatMeals":15,"total":543.15},{"allCount":16,"avgPrice":27.21,"avgRating":3.69,"count":16,"cumulativeVendors":66,"label":"2026-07","month":"2607","newVendors":3,"repeatMeals":13,"total":408.17},{"allCount":20,"avgPrice":28.74,"avgRating":3.48,"count":19,"cumulativeVendors":72,"label":"2026-08","month":"2608","newVendors":6,"repeatMeals":14,"total":488.52},{"allCount":20,"avgPrice":27.54,"avgRating":3.4,"count":14,"cumulativeVendors":80,"label":"2026-09","month":"2609","newVendors":8,"repeatMeals":12,"total":385.59},{"allCount":12,"avgPrice":28.12,"avgRating":3.88,"count":9,"cumulativeVendors":84,"label":"2026-10","month":"2610","newVendors":4,"repeatMeals":8,"total":253.1},{"allCount":6,"avgPrice":28.12,"avgRating":3.83,"count":4,"cumulativeVendors":86,"label":"2026-11","month":"2611","newVendors":2,"repeatMeals":4,"total":112.5}],"period":{"calendarDays":365,"endDate":"2026-11-09","key":"year1","label":"一周年整 (2025.11.10 – 2026.11.09)","rawEnd":"261109","rawStart":"251110","startDate":"2025-11-10"},"scatterVendors":[{"avgPrice":20.95,"avgRating":2.9,"avgRating2":2.87,"count":26,"firstDate":"2025-11-21","fiveStarCount":0,"lastDate":"2026-09-24","statCount":26,"statTotal":544.57,"total":544.57,"vendor":"食堂","weight":0},{"avgPrice":33.9,"avgRating":3.3,"avgRating2":3.33,"count":15,"firstDate":"2025-11-20","fiveStarCount":0,"lastDate":"2026-11-05","statCount":15,"statTotal":474.65,"total":474.65,"vendor":"K记","weight":36},{"avgPrice":27.5,"avgRating":2.6,"avgRating2":2.56,"count":8,"firstDate":"2025-12-22","fiveStarCount":0,"lastDate":"2026-08-26","statCount":7,"statTotal":78.0,"total":110.0,"vendor":"兰轩","weight":0},{"avgPrice":28.88,"avgRating":3.7,"avgRating2":3.71,"count":7,"firstDate":"2026-02-04","fiveStarCount":0,"lastDate":"2026-11-04","statCount":6,"statTotal":172.05,"total":202.15,"vendor":"超级碗","weight":75},{"avgPrice":24.98,"avgRating":3.1,"avgRating2":3.07,"count":7,"firstDate":"2025-11-11","fiveStarCount":0,"lastDate":"2026-11-09","statCount":7,"statTotal":149.9,"total":149.9,"vendor":"农耕记","weight":32},{"avgPrice":29.45,"avgRating":4.2,"avgRating2":4.17,"count":6,"firstDate":"2025-12-31","fiveStarCount":0,"lastDate":"2026-09-09","statCount":6,"statTotal":176.7,"total":176.7,"vendor":"子午路张记肉夹馍","weight":91},{"avgPrice":25.18,"avgRating":3.5,"avgRating2":3.5,"count":6,"firstDate":"2025-12-19","fiveStarCount":0,"lastDate":"2026-10-27","statCount":6,"statTotal":151.08,"total":151.08,"vendor":"麻辣拌","weight":62},{"avgPrice":30.0,"avgRating":3.8,"avgRating2":3.8,"count":5,"firstDate":"2025-12-09","fiveStarCount":0,"lastDate":"2026-08-12","statCount":5,"statTotal":60.0,"total":60.0,"vendor":"必胜客","weight":81},{"avgPrice":29.32,"avgRating":3.5,"avgRating2":3.5,"count":5,"firstDate":"2026-03-16","fiveStarCount":0,"lastDate":"2026-09-15","statCount":5,"statTotal":146.6,"total":146.6,"vendor":"卤肉饭","weight":66},{"avgPrice":28.02,"avgRating":3.1,"avgRating2":3.1,"count":5,"firstDate":"2026-04-15","fiveStarCount":0,"lastDate":"2026-08-28","statCount":5,"statTotal":140.1,"total":140.1,"vendor":"嫩牛家","weight":61},{"avgPrice":25.0,"avgRating":4.8,"avgRating2":4.75,"count":4,"firstDate":"2026-06-02","fiveStarCount":2,"lastDate":"2026-08-25","statCount":4,"statTotal":100.0,"total":100.0,"vendor":"大鸭梨","weight":120},{"avgPrice":23.25,"avgRating":4.0,"avgRating2":4.0,"count":4,"firstDate":"2026-04-22","fiveStarCount":0,"lastDate":"2026-11-02","statCount":4,"statTotal":93.0,"total":93.0,"vendor":"金手勺","weight":89},{"avgPrice":27.35,"avgRating":3.8,"avgRating2":3.75,"count":4,"firstDate":"2025-12-10","fiveStarCount":0,"lastDate":"2026-08-10","statCount":4,"statTotal":109.4,"total":109.4,"vendor":"咖喱饭","weight":82},{"avgPrice":28.3,"avgRating":3.8,"avgRating2":3.75,"count":4,"firstDate":"2026-02-06","fiveStarCount":0,"lastDate":"2026-09-07","statCount":4,"statTotal":84.9,"total":84.9,"vendor":"眉州东坡","weight":82},{"avgPrice":24.62,"avgRating":3.6,"avgRating2":3.62,"count":4,"firstDate":"2026-01-14","fiveStarCount":0,"lastDate":"2026-09-16","statCount":4,"statTotal":98.5,"total":98.5,"vendor":"魏家凉皮","weight":79},{"avgPrice":28.4,"avgRating":3.4,"avgRating2":3.38,"count":4,"firstDate":"2025-11-13","fiveStarCount":0,"lastDate":"2026-06-25","statCount":4,"statTotal":56.8,"total":56.8,"vendor":"米村拌饭","weight":73},{"avgPrice":23.2,"avgRating":3.2,"avgRating2":3.25,"count":4,"firstDate":"2025-12-15","fiveStarCount":0,"lastDate":"2026-04-27","statCount":4,"statTotal":92.8,"total":92.8,"vendor":"一家低脂的茶香牛肉饭","weight":62},{"avgPrice":22.75,"avgRating":3.0,"avgRating2":3.0,"count":4,"firstDate":"2026-04-20","fiveStarCount":0,"lastDate":"2026-07-30","statCount":4,"statTotal":91.0,"total":91.0,"vendor":"甲乙饼","weight":63},{"avgPrice":24.17,"avgRating":4.3,"avgRating2":4.33,"count":3,"firstDate":"2026-03-12","fiveStarCount":0,"lastDate":"2026-06-08","statCount":3,"statTotal":72.5,"total":72.5,"vendor":"老广烧腊","weight":99},{"avgPrice":32.33,"avgRating":4.3,"avgRating2":4.33,"count":3,"firstDate":"2026-05-11","fiveStarCount":0,"lastDate":"2026-07-20","statCount":3,"statTotal":97.0,"total":97.0,"vendor":"祥隆餐厅","weight":99},{"avgPrice":26.97,"avgRating":4.0,"avgRating2":4.0,"count":3,"firstDate":"2026-02-28","fiveStarCount":0,"lastDate":"2026-07-22","statCount":3,"statTotal":80.9,"total":80.9,"vendor":"青年星厨","weight":92},{"avgPrice":32.47,"avgRating":4.0,"avgRating2":4.0,"count":3,"firstDate":"2026-08-18","fiveStarCount":0,"lastDate":"2026-10-14","statCount":3,"statTotal":97.4,"total":97.4,"vendor":"净香居","weight":92},{"avgPrice":25.17,"avgRating":3.7,"avgRating2":3.67,"count":3,"firstDate":"2026-04-01","fiveStarCount":0,"lastDate":"2026-09-30","statCount":3,"statTotal":75.5,"total":75.5,"vendor":"麻辣香锅","weight":85},{"avgPrice":20.97,"avgRating":3.5,"avgRating2":3.5,"count":3,"firstDate":"2026-03-06","fiveStarCount":0,"lastDate":"2026-07-10","statCount":3,"statTotal":62.9,"total":62.9,"vendor":"湘圣","weight":81},{"avgPrice":36.33,"avgRating":3.3,"avgRating2":3.33,"count":3,"firstDate":"2025-11-17","fiveStarCount":0,"lastDate":"2026-06-12","statCount":3,"statTotal":109.0,"total":109.0,"vendor":"松鹤楼","weight":78},{"avgPrice":24.23,"avgRating":3.3,"avgRating2":3.33,"count":3,"firstDate":"2025-12-16","fiveStarCount":0,"lastDate":"2026-05-09","statCount":3,"statTotal":72.7,"total":72.7,"vendor":"紫光园","weight":78},{"avgPrice":24.2,"avgRating":3.3,"avgRating2":3.33,"count":3,"firstDate":"2026-03-10","fiveStarCount":0,"lastDate":"2026-10-26","statCount":3,"statTotal":72.6,"total":72.6,"vendor":"老边饺子","weight":76},{"avgPrice":32.03,"avgRating":3.0,"avgRating2":3.0,"count":3,"firstDate":"2026-03-17","fiveStarCount":0,"lastDate":"2026-06-11","statCount":3,"statTotal":96.1,"total":96.1,"vendor":"德克士","weight":63},{"avgPrice":27.95,"avgRating":2.7,"avgRating2":2.67,"count":3,"firstDate":"2025-12-26","fiveStarCount":0,"lastDate":"2026-05-18","statCount":3,"statTotal":55.9,"total":55.9,"vendor":"外婆家","weight":49},{"avgPrice":22.4,"avgRating":4.5,"avgRating2":4.5,"count":2,"firstDate":"2026-03-11","fiveStarCount":0,"lastDate":"2026-09-28","statCount":2,"statTotal":44.8,"total":44.8,"vendor":"猪脚饭","weight":106},{"avgPrice":29.5,"avgRating":4.2,"avgRating2":4.25,"count":2,"firstDate":"2026-06-24","fiveStarCount":0,"lastDate":"2026-10-12","statCount":2,"statTotal":59.0,"total":59.0,"vendor":"野鸡枞","weight":102},{"avgPrice":25.33,"avgRating":4.0,"avgRating2":4.0,"count":2,"firstDate":"2026-02-24","fiveStarCount":0,"lastDate":"2026-05-20","statCount":2,"statTotal":50.65,"total":50.65,"vendor":"西北站・全羊","weight":98},{"avgPrice":24.8,"avgRating":4.0,"avgRating2":4.0,"count":2,"firstDate":"2026-04-23","fiveStarCount":0,"lastDate":"2026-04-30","statCount":1,"statTotal":24.8,"total":24.8,"vendor":"滕州菜煎饼","weight":0},{"avgPrice":31.25,"avgRating":3.8,"avgRating2":3.75,"count":2,"firstDate":"2026-01-16","fiveStarCount":0,"lastDate":"2026-03-20","statCount":2,"statTotal":62.5,"total":62.5,"vendor":"郁陵岛","weight":94},{"avgPrice":23.04,"avgRating":3.5,"avgRating2":3.5,"count":2,"firstDate":"2025-12-08","fiveStarCount":0,"lastDate":"2026-05-15","statCount":2,"statTotal":46.08,"total":46.08,"vendor":"鸭血粉丝汤","weight":90},{"avgPrice":24.5,"avgRating":3.5,"avgRating2":3.5,"count":2,"firstDate":"2025-12-18","fiveStarCount":0,"lastDate":"2026-06-15","statCount":2,"statTotal":49.0,"total":49.0,"vendor":"黄焖鸡米饭","weight":90},{"avgPrice":26.5,"avgRating":3.5,"avgRating2":3.5,"count":2,"firstDate":"2026-07-07","fiveStarCount":0,"lastDate":"2026-09-02","statCount":2,"statTotal":53.0,"total":53.0,"vendor":"塔斯汀","weight":90},{"avgPrice":27.6,"avgRating":3.2,"avgRating2":3.25,"count":2,"firstDate":"2026-04-21","fiveStarCount":0,"lastDate":"2026-06-10","statCount":2,"statTotal":55.2,"total":55.2,"vendor":"武圣羊汤","weight":86},{"avgPrice":27.9,"avgRating":2.5,"avgRating2":2.5,"count":2,"firstDate":"2026-03-02","fiveStarCount":0,"lastDate":"2026-08-07","statCount":2,"statTotal":55.8,"total":55.8,"vendor":"跷脚牛肉","weight":51},{"avgPrice":8.25,"avgRating":2.0,"avgRating2":2.0,"count":2,"firstDate":"2026-02-03","fiveStarCount":0,"lastDate":"2026-03-23","statCount":2,"statTotal":16.5,"total":16.5,"vendor":"包子","weight":0}],"seasons":[{"allCount":57,"avgPrice":25.49,"avgRating":3.21,"count":51,"key":"winter","season":"冬季篇 (25.11–26.01)","shortName":"❄️ 冬季","topVendor":"食堂","topVendorCount":16,"total":1121.41,"uniqueVendors":31},{"allCount":53,"avgPrice":24.9,"avgRating":3.3,"count":47,"key":"spring","season":"春季篇 (26.02–26.04)","shortName":"🌱 春季","topVendor":"K记","topVendorCount":4,"total":1020.92,"uniqueVendors":36},{"allCount":56,"avgPrice":27.51,"avgRating":3.58,"count":53,"key":"summer","season":"夏季篇 (26.05–26.07)","shortName":"☀️ 夏季","topVendor":"K记","topVendorCount":4,"total":1403.24,"uniqueVendors":36},{"allCount":58,"avgPrice":28.18,"avgRating":3.57,"count":46,"key":"autumn","season":"秋季篇 (26.08–26.11)","shortName":"🍂 秋季","topVendor":"超级碗","topVendorCount":5,"total":1239.71,"uniqueVendors":41}],"specialMeals":{"avgRating":3.76,"count":27,"items":[{"date":"2025-11-27","includeInStats":false,"price":0.0,"rate":3.0},{"date":"2025-11-28","includeInStats":false,"price":16.27,"rate":3.0},{"date":"2025-12-17","includeInStats":false,"price":0.0,"rate":2.5},{"date":"2025-12-24","includeInStats":false,"price":43.5,"rate":3.5},{"date":"2026-01-26","includeInStats":false,"price":6.0,"rate":4.0},{"date":"2026-01-27","includeInStats":false,"price":0.0,"rate":3.5},{"date":"2026-02-10","includeInStats":false,"price":96.77,"rate":4.5},{"date":"2026-03-03","includeInStats":false,"price":0.0,"rate":4.5},{"date":"2026-03-24","includeInStats":false,"price":0.0,"rate":4.0},{"date":"2026-03-27","includeInStats":false,"price":134.0,"rate":5.0},{"date":"2026-04-13","includeInStats":false,"price":46.0,"rate":4.5},{"date":"2026-04-30","includeInStats":false,"price":0.0,"rate":4.0},{"date":"2026-05-19","includeInStats":false,"price":0.0,"rate":4.0},{"date":"2026-06-01","includeInStats":false,"price":43.5,"rate":4.0},{"date":"2026-06-30","includeInStats":false,"price":17.1,"rate":3.5},{"date":"2026-08-26","includeInStats":false,"price":32.0,"rate":2.0},{"date":"2026-09-18","includeInStats":false,"price":0.0,"rate":3.5},{"date":"2026-09-19","includeInStats":false,"price":41.7,"rate":3.5},{"date":"2026-09-20","includeInStats":false,"price":94.56,"rate":4.5},{"date":"2026-09-21","includeInStats":false,"price":52.13,"rate":1.5},{"date":"2026-09-22","includeInStats":false,"price":53.19,"rate":4.0},{"date":"2026-09-23","includeInStats":false,"price":69.58,"rate":4.5},{"date":"2026-10-09","includeInStats":false,"price":0.0,"rate":4.5},{"date":"2026-10-28","includeInStats":false,"price":0.0,"rate":3.0},{"date":"2026-10-30","includeInStats":false,"price":66.0,"rate":4.5},{"date":"2026-11-04","includeInStats":false,"price":30.1,"rate":3.5},{"date":"2026-11-06","includeInStats":false,"price":67.0,"rate":5.0}],"totalSpent":909.4},"summary":{"activeVendorsVisited":46,"allMaxPrice":134.0,"allMeals":224,"allSpent":5694.68,"avgPrice":26.58,"avgRating":3.4,"avgRatingPrecise":3.42,"calendarStreak":{"days":10,"end":"2026-09-24","start":"2026-09-15"},"eliminatedVendorsVisited":40,"excludedMeals":27,"fiveStarCount":4,"freeMeals":17,"highRatingCount":84,"highRatingRatio":37.5,"kjiCount":15,"kjiThursdayCount":13,"kjiThursdayRatio":86.7,"lowRatingCount":22,"maxPrice":48.0,"medianPrice":25.9,"minPrice":8.0,"paidMeals":180,"retentionRate":53.5,"totalMeals":197,"totalSpent":4785.28,"totalVendorsInPool":100,"unvisitedActiveVendors":12,"vendorsUsed":86,"weekdayMeals":218,"weekdayRatio":97.3,"weekendMeals":6,"workdayStreak":{"days":32,"end":"2026-06-18","start":"2026-05-06"}},"topVendors":[{"avgPrice":20.95,"avgRating":2.9,"avgRating2":2.87,"count":26,"firstDate":"2025-11-21","fiveStarCount":0,"lastDate":"2026-09-24","statCount":26,"statTotal":544.57,"total":544.57,"vendor":"食堂","weight":0},{"avgPrice":33.9,"avgRating":3.3,"avgRating2":3.33,"count":15,"firstDate":"2025-11-20","fiveStarCount":0,"lastDate":"2026-11-05","statCount":15,"statTotal":474.65,"total":474.65,"vendor":"K记","weight":36},{"avgPrice":27.5,"avgRating":2.6,"avgRating2":2.56,"count":8,"firstDate":"2025-12-22","fiveStarCount":0,"lastDate":"2026-08-26","statCount":7,"statTotal":78.0,"total":110.0,"vendor":"兰轩","weight":0},{"avgPrice":28.88,"avgRating":3.7,"avgRating2":3.71,"count":7,"firstDate":"2026-02-04","fiveStarCount":0,"lastDate":"2026-11-04","statCount":6,"statTotal":172.05,"total":202.15,"vendor":"超级碗","weight":75},{"avgPrice":24.98,"avgRating":3.1,"avgRating2":3.07,"count":7,"firstDate":"2025-11-11","fiveStarCount":0,"lastDate":"2026-11-09","statCount":7,"statTotal":149.9,"total":149.9,"vendor":"农耕记","weight":32},{"avgPrice":29.45,"avgRating":4.2,"avgRating2":4.17,"count":6,"firstDate":"2025-12-31","fiveStarCount":0,"lastDate":"2026-09-09","statCount":6,"statTotal":176.7,"total":176.7,"vendor":"子午路张记肉夹馍","weight":91},{"avgPrice":25.18,"avgRating":3.5,"avgRating2":3.5,"count":6,"firstDate":"2025-12-19","fiveStarCount":0,"lastDate":"2026-10-27","statCount":6,"statTotal":151.08,"total":151.08,"vendor":"麻辣拌","weight":62},{"avgPrice":29.32,"avgRating":3.5,"avgRating2":3.5,"count":5,"firstDate":"2026-03-16","fiveStarCount":0,"lastDate":"2026-09-15","statCount":5,"statTotal":146.6,"total":146.6,"vendor":"卤肉饭","weight":66},{"avgPrice":28.02,"avgRating":3.1,"avgRating2":3.1,"count":5,"firstDate":"2026-04-15","fiveStarCount":0,"lastDate":"2026-08-28","statCount":5,"statTotal":140.1,"total":140.1,"vendor":"嫩牛家","weight":61},{"avgPrice":30.0,"avgRating":3.8,"avgRating2":3.8,"count":5,"firstDate":"2025-12-09","fiveStarCount":0,"lastDate":"2026-08-12","statCount":5,"statTotal":60.0,"total":60.0,"vendor":"必胜客","weight":81},{"avgPrice":27.35,"avgRating":3.8,"avgRating2":3.75,"count":4,"firstDate":"2025-12-10","fiveStarCount":0,"lastDate":"2026-08-10","statCount":4,"statTotal":109.4,"total":109.4,"vendor":"咖喱饭","weight":82},{"avgPrice":25.0,"avgRating":4.8,"avgRating2":4.75,"count":4,"firstDate":"2026-06-02","fiveStarCount":2,"lastDate":"2026-08-25","statCount":4,"statTotal":100.0,"total":100.0,"vendor":"大鸭梨","weight":120},{"avgPrice":24.62,"avgRating":3.6,"avgRating2":3.62,"count":4,"firstDate":"2026-01-14","fiveStarCount":0,"lastDate":"2026-09-16","statCount":4,"statTotal":98.5,"total":98.5,"vendor":"魏家凉皮","weight":79},{"avgPrice":23.25,"avgRating":4.0,"avgRating2":4.0,"count":4,"firstDate":"2026-04-22","fiveStarCount":0,"lastDate":"2026-11-02","statCount":4,"statTotal":93.0,"total":93.0,"vendor":"金手勺","weight":89},{"avgPrice":23.2,"avgRating":3.2,"avgRating2":3.25,"count":4,"firstDate":"2025-12-15","fiveStarCount":0,"lastDate":"2026-04-27","statCount":4,"statTotal":92.8,"total":92.8,"vendor":"一家低脂的茶香牛肉饭","weight":62}],"vendorRatings":[{"avgPrice":25.0,"avgRating":4.8,"avgRating2":4.75,"count":4,"firstDate":"2026-06-02","fiveStarCount":2,"lastDate":"2026-08-25","statCount":4,"statTotal":100.0,"total":100.0,"vendor":"大鸭梨","weight":120},{"avgPrice":22.4,"avgRating":4.5,"avgRating2":4.5,"count":2,"firstDate":"2026-03-11","fiveStarCount":0,"lastDate":"2026-09-28","statCount":2,"statTotal":44.8,"total":44.8,"vendor":"猪脚饭","weight":106},{"avgPrice":32.33,"avgRating":4.3,"avgRating2":4.33,"count":3,"firstDate":"2026-05-11","fiveStarCount":0,"lastDate":"2026-07-20","statCount":3,"statTotal":97.0,"total":97.0,"vendor":"祥隆餐厅","weight":99},{"avgPrice":24.17,"avgRating":4.3,"avgRating2":4.33,"count":3,"firstDate":"2026-03-12","fiveStarCount":0,"lastDate":"2026-06-08","statCount":3,"statTotal":72.5,"total":72.5,"vendor":"老广烧腊","weight":99},{"avgPrice":29.45,"avgRating":4.2,"avgRating2":4.17,"count":6,"firstDate":"2025-12-31","fiveStarCount":0,"lastDate":"2026-09-09","statCount":6,"statTotal":176.7,"total":176.7,"vendor":"子午路张记肉夹馍","weight":91},{"avgPrice":29.5,"avgRating":4.2,"avgRating2":4.25,"count":2,"firstDate":"2026-06-24","fiveStarCount":0,"lastDate":"2026-10-12","statCount":2,"statTotal":59.0,"total":59.0,"vendor":"野鸡枞","weight":102},{"avgPrice":23.25,"avgRating":4.0,"avgRating2":4.0,"count":4,"firstDate":"2026-04-22","fiveStarCount":0,"lastDate":"2026-11-02","statCount":4,"statTotal":93.0,"total":93.0,"vendor":"金手勺","weight":89},{"avgPrice":32.47,"avgRating":4.0,"avgRating2":4.0,"count":3,"firstDate":"2026-08-18","fiveStarCount":0,"lastDate":"2026-10-14","statCount":3,"statTotal":97.4,"total":97.4,"vendor":"净香居","weight":92},{"avgPrice":26.97,"avgRating":4.0,"avgRating2":4.0,"count":3,"firstDate":"2026-02-28","fiveStarCount":0,"lastDate":"2026-07-22","statCount":3,"statTotal":80.9,"total":80.9,"vendor":"青年星厨","weight":92},{"avgPrice":24.8,"avgRating":4.0,"avgRating2":4.0,"count":2,"firstDate":"2026-04-23","fiveStarCount":0,"lastDate":"2026-04-30","statCount":1,"statTotal":24.8,"total":24.8,"vendor":"滕州菜煎饼","weight":0}],"weekdays":[{"allCount":43,"avgPrice":25.96,"avgRating":3.35,"count":39,"index":0,"kjiCount":0,"topVendor":"食堂","topVendorCount":5,"total":960.46,"weekday":"周一"},{"allCount":45,"avgPrice":25.51,"avgRating":3.52,"count":38,"index":1,"kjiCount":0,"topVendor":"食堂","topVendorCount":6,"total":918.34,"weekday":"周二"},{"allCount":46,"avgPrice":26.75,"avgRating":3.43,"count":40,"index":2,"kjiCount":1,"topVendor":"食堂","topVendorCount":5,"total":989.82,"weekday":"周三"},{"allCount":44,"avgPrice":29.01,"avgRating":3.31,"count":42,"index":3,"kjiCount":13,"topVendor":"K记","topVendorCount":13,"total":1131.49,"weekday":"周四"},{"allCount":40,"avgPrice":25.43,"avgRating":3.46,"count":34,"index":4,"kjiCount":1,"topVendor":"食堂","topVendorCount":3,"total":686.74,"weekday":"周五"},{"allCount":4,"avgPrice":26.53,"avgRating":3.38,"count":3,"index":5,"kjiCount":0,"topVendor":"青年星厨","topVendorCount":1,"total":79.6,"weekday":"周六"},{"allCount":2,"avgPrice":18.83,"avgRating":3.75,"count":1,"index":6,"kjiCount":0,"topVendor":"食堂","topVendorCount":1,"total":18.83,"weekday":"周日"}]};
+let heatmapMode = 'rate';
+let rightRankMode = 'rating';
+const chartInstances = {};
+
+function esc(s) {
+  const d = document.createElement('div');
+  d.textContent = s == null ? '' : String(s);
+  return d.innerHTML;
+}
+
+function fmtMoney(n) {
+  return n == null ? '—' : Number(n).toFixed(2);
+}
+
+function destroyChart(key) {
+  if (chartInstances[key]) {
+    chartInstances[key].destroy();
+    delete chartInstances[key];
+  }
+}
+
+function renderAll(data) {
+  renderHero(data);
+  renderKPIs(data);
+  renderAwards(data);
+  renderHeatmap(data);
+  renderMonthlyTrendChart(data.monthly);
+  renderDiscoveryChart(data.monthly);
+  renderWeekdaySection(data.weekdays, data.summary);
+  renderSeasonSection(data.seasons);
+  renderPyramidSection(data.exploration.frequencyBuckets, data.summary.vendorsUsed);
+  renderScatterChart(data.scatterVendors, data.summary);
+  renderTopVendors(data.topVendors);
+  renderRightRankList();
+  renderSpecialSection(data.specialMeals);
+  document.getElementById('footerNote').innerHTML =
+    '统计口径：日常消费与单价仅统计勾选「纳入统计」的记录（均价与最低价不含免费餐）；评分、探索商家数与打卡排行涵盖周期内全部记录。<br>' +
+    '数据冻结周期：2025-11-10 至 2026-11-09（一周年静态归档）';
+}
+
+function renderHero(data) {
+  const p = data.period;
+  const s = data.summary;
+  const h = data.highlights;
+  document.getElementById('heroPeriod').textContent =
+    p.label + ' · 共跨越 ' + p.calendarDays + ' 个自然日';
+
+  if (!s.allMeals) {
+    document.getElementById('heroNarrative').textContent = '当前所选周期内暂无点餐记录。';
+    return;
+  }
+
+  const firstStr = h.firstMeal
+    ? '从 <strong>' + esc(h.firstMeal.date) + '</strong> 的第一顿「<strong>' + esc(h.firstMeal.vendor) + '</strong>」启程'
+    : '从第一顿记录启程';
+  const lastStr = h.lastMeal
+    ? '，至 <strong>' + esc(h.lastMeal.date) + '</strong> 的「<strong>' + esc(h.lastMeal.vendor) + '</strong>」'
+    : '';
+  const topV = h.mostVisited ? '「<strong>' + esc(h.mostVisited.vendor) + '</strong>」（' + h.mostVisited.count + '次）' : '—';
+  const extV = (h.mostVisitedExternal && (!h.mostVisited || h.mostVisitedExternal.vendor !== h.mostVisited.vendor))
+    ? '与外卖/外食头牌「<strong>' + esc(h.mostVisitedExternal.vendor) + '</strong>」（' + h.mostVisitedExternal.count + '次）'
+    : '';
+
+  document.getElementById('heroNarrative').innerHTML =
+    firstStr + lastStr + '，这一周期共记录了 <strong>' + s.allMeals + '</strong> 顿美食（其中 <strong>' +
+    s.totalMeals + '</strong> 顿纳入日常消费统计，另有 <strong>' + s.excludedMeals + '</strong> 顿到店/差旅特别记录）。' +
+    '味觉版图覆盖了 <strong>' + s.vendorsUsed + '</strong> 家餐厅，日常累计支出 <strong>¥' + fmtMoney(s.totalSpent) + '</strong>，' +
+    '付费单餐均价 <strong>¥' + fmtMoney(s.avgPrice) + '</strong>（中位数 <strong>¥' + fmtMoney(s.medianPrice) + '</strong>），' +
+    '平均评分 <strong>' + (s.avgRatingPrecise != null ? s.avgRatingPrecise.toFixed(2) : '—') + ' ⭐</strong>。' +
+    '全年 <strong>' + s.weekdayRatio + '%</strong> 的点餐发生在工作日，' + topV + extV + '陪伴了最多的干饭时光。';
+}
+
+function renderKPIs(data) {
+  const s = data.summary;
+  const cards = [
+    {
+      icon: '🥢',
+      label: '纳入统计餐数',
+      value: s.totalMeals + ' 顿',
+      sub: '全量记录 ' + s.allMeals + ' 顿 · 特别记录 ' + s.excludedMeals + ' 顿',
+    },
+    {
+      icon: '💴',
+      label: '年度日常消费',
+      value: '¥' + fmtMoney(s.totalSpent),
+      sub: '含免费餐 ' + s.freeMeals + ' 顿 · 全量总计 ¥' + fmtMoney(s.allSpent),
+    },
+    {
+      icon: '🏷️',
+      label: '付费单餐均价',
+      value: s.avgPrice == null ? '—' : '¥' + fmtMoney(s.avgPrice),
+      sub: '中位数 ' + (s.medianPrice == null ? '—' : '¥' + fmtMoney(s.medianPrice)) +
+           ' · 极值 ¥' + fmtMoney(s.minPrice) + '~¥' + fmtMoney(s.maxPrice),
+    },
+    {
+      icon: '🗺️',
+      label: '解锁餐厅总数',
+      value: s.vendorsUsed + ' 家',
+      sub: '平均每 ' + (s.vendorsUsed ? (s.allMeals / s.vendorsUsed).toFixed(1) : '0') + ' 顿访问一家店',
+    },
+    {
+      icon: '⭐',
+      label: '全年平均评分',
+      value: (s.avgRatingPrecise != null ? s.avgRatingPrecise.toFixed(2) : '—') + ' ⭐',
+      sub: '4⭐及以上好评 ' + s.highRatingCount + ' 顿 (' + s.highRatingRatio + '%)',
+    },
+    {
+      icon: '⚖️',
+      label: 'C1 候选池留存率',
+      value: s.retentionRate + '%',
+      sub: '已打卡中 ' + s.activeVendorsVisited + ' 家留存 · ' + s.eliminatedVendorsVisited + ' 家移出',
+    },
+    {
+      icon: '💼',
+      label: '工作日干饭占比',
+      value: s.weekdayRatio + '%',
+      sub: '工作日 ' + s.weekdayMeals + ' 顿 · 周末 ' + s.weekendMeals + ' 顿',
+    },
+    {
+      icon: '🔥',
+      label: '最长连续工作日记录',
+      value: s.workdayStreak.days + ' 天',
+      sub: (s.workdayStreak.start ? s.workdayStreak.start.slice(5) + ' 至 ' + s.workdayStreak.end.slice(5) : '—') +
+           ' (自然日连击 ' + s.calendarStreak.days + ' 天)',
+    },
+  ];
+
+  document.getElementById('kpiGrid').innerHTML = cards.map(c =>
+    '<div class="kpi-card">' +
+      '<div>' +
+        '<div class="kpi-top"><span class="kpi-label">' + c.label + '</span><span class="kpi-icon">' + c.icon + '</span></div>' +
+        '<div class="kpi-value">' + c.value + '</div>' +
+      '</div>' +
+      '<div class="kpi-sub">' + c.sub + '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function renderAwards(data) {
+  const h = data.highlights;
+  const s = data.summary;
+  const awards = [];
+
+  if (h.firstMeal) {
+    awards.push({
+      cls: 'sage',
+      tag: '🏁 初心起点 · 第一餐',
+      title: esc(h.firstMeal.vendor),
+      desc: h.firstMeal.date + ' 开启记录的第一顿（¥' + fmtMoney(h.firstMeal.price) + ' · ' + h.firstMeal.rate + '⭐）。' +
+            (h.lastMeal ? '周期收官于 ' + h.lastMeal.date + '「' + esc(h.lastMeal.vendor) + '」。' : ''),
+    });
+  }
+
+  if (h.mostVisited) {
+    const extText = (h.mostVisitedExternal && h.mostVisitedExternal.vendor !== h.mostVisited.vendor)
+      ? '社会餐饮头牌为「' + esc(h.mostVisitedExternal.vendor) + '」（' + h.mostVisitedExternal.count + '次，¥' + fmtMoney(h.mostVisitedExternal.total) + '）。'
+      : '';
+    awards.push({
+      cls: 'gold',
+      tag: '👑 年度劳模 · 最高频餐厅',
+      title: esc(h.mostVisited.vendor) + ' (' + h.mostVisited.count + '次)',
+      desc: '全年累计消费 ¥' + fmtMoney(h.mostVisited.total) + '，均价 ¥' + fmtMoney(h.mostVisited.avgPrice) +
+            '，平均评分 ' + h.mostVisited.avgRating2 + '⭐。' + extText,
+    });
+  }
+
+  if (h.bestRatedRegular) {
+    awards.push({
+      cls: 'gold',
+      tag: '💎 年度口碑王 (打卡≥3次)',
+      title: esc(h.bestRatedRegular.vendor) + ' (' + h.bestRatedRegular.avgRating2 + '⭐)',
+      desc: '共打卡 ' + h.bestRatedRegular.count + ' 次，斩获 ' + h.bestRatedRegular.fiveStarCount +
+            ' 次 5.0⭐ 满分，均价仅 ¥' + fmtMoney(h.bestRatedRegular.avgPrice) + '，稳居 C1 权重榜首。',
+    });
+  }
+
+  if (s.kjiCount > 0) {
+    awards.push({
+      cls: 'warm',
+      tag: '🍗 疯狂星期四定律',
+      title: 'K记 · 周四占比 ' + s.kjiThursdayRatio + '%',
+      desc: '全年共吃 ' + s.kjiCount + ' 次 K记，其中 ' + s.kjiThursdayCount +
+            ' 次发生在星期四！直接拉动周四全天均价升至 ¥' +
+            fmtMoney((data.weekdays[3] || {}).avgPrice) + '（全周最高）。',
+    });
+  }
+
+  if (h.highestStatMeal || h.lowestPaidStatMeal) {
+    awards.push({
+      cls: 'slate',
+      tag: '💰 年度单餐价格极值',
+      title: '¥' + fmtMoney(h.lowestPaidStatMeal ? h.lowestPaidStatMeal.price : 0) + ' ~ ¥' + fmtMoney(h.highestStatMeal ? h.highestStatMeal.price : 0),
+      desc: (h.highestStatMeal ? '日常最贵：' + esc(h.highestStatMeal.vendor) + ' ¥' + fmtMoney(h.highestStatMeal.price) + ' (' + h.highestStatMeal.date + ')；' : '') +
+            (h.lowestPaidStatMeal ? '最实惠付费：' + esc(h.lowestPaidStatMeal.vendor) + ' ¥' + fmtMoney(h.lowestPaidStatMeal.price) + '；' : '') +
+            (h.highestAllMeal && (!h.highestStatMeal || h.highestAllMeal.price > h.highestStatMeal.price)
+              ? '全量最高：' + esc(h.highestAllMeal.vendor) + ' ¥' + fmtMoney(h.highestAllMeal.price) + '。' : ''),
+    });
+  }
+
+  awards.push({
+    cls: 'coral',
+    tag: '⚡ 满分神作 vs 踩雷时刻',
+    title: s.fiveStarCount + ' 顿满分 · ' + h.lowRatedMeals.length + ' 顿低分(≤1.5⭐)',
+    desc: '5.0⭐ 满分：' + (h.fiveStarMeals.map(m => esc(m.vendor)).join('、') || '暂无') + '；' +
+          '≤1.5⭐ 踩雷：' + (h.lowRatedMeals.map(m => esc(m.vendor) + '(' + m.rate + '⭐)').join('、') || '暂无') + '。',
+  });
+
+  document.getElementById('awardsGrid').innerHTML = awards.map(a =>
+    '<div class="award-card ' + a.cls + '">' +
+      '<div class="award-tag">' + a.tag + '</div>' +
+      '<div class="award-title">' + a.title + '</div>' +
+      '<div class="award-desc">' + a.desc + '</div>' +
+    '</div>'
+  ).join('');
+}
+
+/* ==============================
+ *  365-Day Calendar Heatmap
+ * ============================== */
+function setHeatmapMode(mode) {
+  heatmapMode = mode;
+  document.getElementById('hmModeRate').classList.toggle('active', mode === 'rate');
+  document.getElementById('hmModePrice').classList.toggle('active', mode === 'price');
+  if (annualData) renderHeatmap(annualData);
+}
+
+function getHeatmapColor(meal, mode) {
+  if (!meal) return '#ebe9e4';
+  if (mode === 'rate') {
+    const r = meal.rate;
+    if (r >= 4.5) return '#3b5d4c';
+    if (r >= 4.0) return '#5f8775';
+    if (r >= 3.5) return '#8fb5a3';
+    if (r >= 3.0) return '#b7CEC2';
+    if (r >= 2.0) return '#d4a574';
+    return '#c17b6b';
+  } else {
+    const p = meal.price;
+    if (p === 0) return '#b8c7d1';
+    if (p <= 15) return '#cce0d6';
+    if (p <= 25) return '#8fb5a3';
+    if (p <= 35) return '#5f8775';
+    return '#3b5d4c';
+  }
+}
+
+function renderHeatmap(data) {
+  const grid = document.getElementById('heatmapGrid');
+  const monthsBar = document.getElementById('heatmapMonths');
+  const legend = document.getElementById('heatmapLegend');
+
+  const mealByDate = {};
+  (data.calendar || []).forEach(m => {
+    mealByDate[m.date] = m;
+  });
+
+  const start = new Date(data.period.startDate + 'T00:00:00');
+  const end = new Date(data.period.endDate + 'T00:00:00');
+
+  const startDow = (start.getDay() + 6) % 7;
+  const gridStart = new Date(start);
+  gridStart.setDate(gridStart.getDate() - startDow);
+
+  const endDow = (end.getDay() + 6) % 7;
+  const gridEnd = new Date(end);
+  gridEnd.setDate(gridEnd.getDate() + (6 - endDow));
+
+  const cells = [];
+  const monthLabels = [];
+  let cur = new Date(gridStart);
+  let weekIdx = 0;
+  let lastMonth = '';
+
+  const weekdayNames = ['周一', '周二', '周三', '周四', '周五', '周六', '周日'];
+
+  while (cur <= gridEnd) {
+    const dow = (cur.getDay() + 6) % 7;
+    const iso = cur.getFullYear() + '-' +
+      String(cur.getMonth() + 1).padStart(2, '0') + '-' +
+      String(cur.getDate()).padStart(2, '0');
+    const inRange = cur >= start && cur <= end;
+
+    if (dow === 0) {
+      const ym = iso.slice(0, 7);
+      if (ym !== lastMonth && cur <= end) {
+        monthLabels.push('<span style="grid-column:' + (weekIdx + 1) + '">' + iso.slice(2, 7) + '</span>');
+        lastMonth = ym;
+      }
+      weekIdx++;
+    }
+
+    if (!inRange) {
+      cells.push('<div class="hm-cell out-range"></div>');
+    } else {
+      const m = mealByDate[iso];
+      const bg = getHeatmapColor(m, heatmapMode);
+      const cls = ['hm-cell'];
+      if (m) cls.push('has-meal');
+      if (m && !m.includeInStats) cls.push('special-meal');
+      const tip = m
+        ? iso + ' (' + weekdayNames[dow] + ') · ' + m.vendor + ' · ¥' + fmtMoney(m.price) + ' · ' + m.rate + '⭐' + (m.includeInStats ? '' : ' [特别记录/不计入日常统计]')
+        : iso + ' (' + weekdayNames[dow] + ') · 无记录';
+      cells.push(
+        '<div class="' + cls.join(' ') + '" style="background:' + bg + '" data-tip="' + esc(tip) + '" ' +
+        'onmouseenter="showHmTip(this)" onclick="showHmTip(this)"></div>'
+      );
+    }
+    cur.setDate(cur.getDate() + 1);
+  }
+
+  monthsBar.innerHTML = monthLabels.join('');
+  grid.innerHTML = cells.join('');
+
+  if (heatmapMode === 'rate') {
+    legend.innerHTML =
+      '<span>图例：</span>' +
+      '<span class="legend-swatch" style="background:#c17b6b"></span><span>≤1.5⭐</span>' +
+      '<span class="legend-swatch" style="background:#d4a574"></span><span>2-2.5⭐</span>' +
+      '<span class="legend-swatch" style="background:#b7CEC2"></span><span>3⭐</span>' +
+      '<span class="legend-swatch" style="background:#8fb5a3"></span><span>3.5⭐</span>' +
+      '<span class="legend-swatch" style="background:#5f8775"></span><span>4⭐</span>' +
+      '<span class="legend-swatch" style="background:#3b5d4c"></span><span>4.5-5⭐</span>';
+  } else {
+    legend.innerHTML =
+      '<span>图例：</span>' +
+      '<span class="legend-swatch" style="background:#b8c7d1"></span><span>免费</span>' +
+      '<span class="legend-swatch" style="background:#cce0d6"></span><span>≤¥15</span>' +
+      '<span class="legend-swatch" style="background:#8fb5a3"></span><span>¥15-25</span>' +
+      '<span class="legend-swatch" style="background:#5f8775"></span><span>¥25-35</span>' +
+      '<span class="legend-swatch" style="background:#3b5d4c"></span><span>¥35+</span>';
+  }
+}
+
+function showHmTip(el) {
+  const tip = el.getAttribute('data-tip');
+  if (tip) {
+    document.getElementById('heatmapDetail').textContent = '📌 ' + tip;
+  }
+}
+
+/* ==============================
+ *  Charts & Sections
+ * ============================== */
+function renderMonthlyTrendChart(monthly) {
+  destroyChart('monthlyTrend');
+  if (!monthly || !monthly.length) return;
+  chartInstances['monthlyTrend'] = new Chart(document.getElementById('monthlyTrendChart'), {
+    type: 'bar',
+    data: {
+      labels: monthly.map(m => m.label),
+      datasets: [
+        {
+          type: 'bar',
+          label: '月消费总额 (¥)',
+          data: monthly.map(m => m.total),
+          backgroundColor: 'rgba(107, 144, 128, 0.65)',
+          borderRadius: 5,
+          yAxisID: 'y',
+        },
+        {
+          type: 'line',
+          label: '点餐次数',
+          data: monthly.map(m => m.count),
+          borderColor: '#c4956a',
+          backgroundColor: '#c4956a',
+          tension: 0.3,
+          yAxisID: 'y1',
+        },
+        {
+          type: 'line',
+          label: '付费均价 (¥)',
+          data: monthly.map(m => m.avgPrice),
+          borderColor: '#4a6b5a',
+          borderDash: [4, 4],
+          tension: 0.3,
+          yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        y: {
+          type: 'linear',
+          position: 'left',
+          title: { display: true, text: '月消费 (¥)' },
+          beginAtZero: true,
+        },
+        y1: {
+          type: 'linear',
+          position: 'right',
+          title: { display: true, text: '次数 / 均价' },
+          beginAtZero: true,
+          grid: { drawOnChartArea: false },
+        }
+      }
+    }
+  });
+}
+
+function renderDiscoveryChart(monthly) {
+  destroyChart('discovery');
+  if (!monthly || !monthly.length) return;
+  chartInstances['discovery'] = new Chart(document.getElementById('discoveryChart'), {
+    type: 'bar',
+    data: {
+      labels: monthly.map(m => m.label),
+      datasets: [
+        {
+          type: 'bar',
+          label: '首次解锁新店',
+          data: monthly.map(m => m.newVendors),
+          backgroundColor: '#c4956a',
+          borderRadius: 4,
+          stack: 'meals',
+          yAxisID: 'y',
+        },
+        {
+          type: 'bar',
+          label: '老店复购顿数',
+          data: monthly.map(m => m.repeatMeals),
+          backgroundColor: 'rgba(143, 181, 163, 0.7)',
+          borderRadius: 4,
+          stack: 'meals',
+          yAxisID: 'y',
+        },
+        {
+          type: 'line',
+          label: '累计解锁商家数',
+          data: monthly.map(m => m.cumulativeVendors),
+          borderColor: '#4a6b5a',
+          backgroundColor: '#4a6b5a',
+          tension: 0.25,
+          yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        x: { stacked: true },
+        y: {
+          stacked: true,
+          position: 'left',
+          title: { display: true, text: '当月顿数' },
+          beginAtZero: true,
+        },
+        y1: {
+          position: 'right',
+          title: { display: true, text: '累计商家 (家)' },
+          beginAtZero: true,
+          grid: { drawOnChartArea: false },
+        }
+      }
+    }
+  });
+}
+
+function renderWeekdaySection(weekdays, summary) {
+  destroyChart('weekday');
+  if (!weekdays || !weekdays.length) return;
+  chartInstances['weekday'] = new Chart(document.getElementById('weekdayChart'), {
+    type: 'bar',
+    data: {
+      labels: weekdays.map(w => w.weekday),
+      datasets: [
+        {
+          type: 'bar',
+          label: '总打卡次数',
+          data: weekdays.map(w => w.allCount),
+          backgroundColor: weekdays.map(w => w.index === 3 ? '#c4956a' : 'rgba(107, 144, 128, 0.7)'),
+          borderRadius: 5,
+          yAxisID: 'y',
+        },
+        {
+          type: 'bar',
+          label: '其中 K记 次数',
+          data: weekdays.map(w => w.kjiCount),
+          backgroundColor: '#c17b6b',
+          borderRadius: 5,
+          yAxisID: 'y',
+        },
+        {
+          type: 'line',
+          label: '平均单价 (¥)',
+          data: weekdays.map(w => w.avgPrice),
+          borderColor: '#4a6b5a',
+          tension: 0.3,
+          yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        y: {
+          position: 'left',
+          title: { display: true, text: '次数' },
+          beginAtZero: true,
+        },
+        y1: {
+          position: 'right',
+          title: { display: true, text: '均价 (¥)' },
+          beginAtZero: true,
+          grid: { drawOnChartArea: false },
+        }
+      }
+    }
+  });
+
+  document.getElementById('weekdayTable').innerHTML =
+    '<thead><tr><th>星期</th><th>打卡(统计内)</th><th>均价</th><th>均分</th><th>K记次数</th><th>最常去餐厅</th></tr></thead>' +
+    '<tbody>' +
+    weekdays.map(w =>
+      '<tr class="' + (w.index === 3 ? 'highlight-row' : '') + '">' +
+        '<td>' + w.weekday + (w.index === 3 ? ' 🔥' : '') + '</td>' +
+        '<td>' + w.allCount + ' (' + w.count + ')</td>' +
+        '<td>' + (w.avgPrice != null ? '¥' + fmtMoney(w.avgPrice) : '—') + '</td>' +
+        '<td>' + (w.avgRating != null ? w.avgRating.toFixed(2) + '⭐' : '—') + '</td>' +
+        '<td>' + (w.kjiCount ? w.kjiCount + ' 次' : '—') + '</td>' +
+        '<td>' + (w.topVendor ? esc(w.topVendor) + ' (' + w.topVendorCount + '次)' : '—') + '</td>' +
+      '</tr>'
+    ).join('') +
+    '</tbody>';
+}
+
+function renderSeasonSection(seasons) {
+  destroyChart('season');
+  if (!seasons || !seasons.length) return;
+  chartInstances['season'] = new Chart(document.getElementById('seasonChart'), {
+    type: 'bar',
+    data: {
+      labels: seasons.map(s => s.shortName),
+      datasets: [
+        {
+          type: 'bar',
+          label: '季度消费 (¥)',
+          data: seasons.map(s => s.total),
+          backgroundColor: ['#8ba5b5', '#8fb5a3', '#c4956a', '#b8977a'],
+          borderRadius: 6,
+          yAxisID: 'y',
+        },
+        {
+          type: 'line',
+          label: '平均评分 (⭐)',
+          data: seasons.map(s => s.avgRating),
+          borderColor: '#4a6b5a',
+          backgroundColor: '#4a6b5a',
+          tension: 0.3,
+          yAxisID: 'y1',
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      interaction: { mode: 'index', intersect: false },
+      plugins: { legend: { position: 'bottom' } },
+      scales: {
+        y: {
+          position: 'left',
+          title: { display: true, text: '消费 (¥)' },
+          beginAtZero: true,
+        },
+        y1: {
+          position: 'right',
+          min: 2.5,
+          max: 4.5,
+          title: { display: true, text: '平均评分 (⭐)' },
+          grid: { drawOnChartArea: false },
+        }
+      }
+    }
+  });
+
+  document.getElementById('seasonGrid').innerHTML = seasons.map(s =>
+    '<div class="season-card">' +
+      '<div class="season-title"><span>' + esc(s.season) + '</span><span>' + s.allCount + ' 顿</span></div>' +
+      '<div class="season-metrics">' +
+        '<span>日常消费：<strong>¥' + fmtMoney(s.total) + '</strong></span>' +
+        '<span>平均单价：<strong>' + (s.avgPrice != null ? '¥' + fmtMoney(s.avgPrice) : '—') + '</strong></span>' +
+        '<span>平均评分：<strong>' + (s.avgRating != null ? s.avgRating.toFixed(2) + '⭐' : '—') + '</strong></span>' +
+        '<span>涉足商家：<strong>' + s.uniqueVendors + ' 家</strong></span>' +
+        '<span style="grid-column:1/-1">当季头牌：<strong>' + (s.topVendor ? esc(s.topVendor) + ' (' + s.topVendorCount + '次)' : '—') + '</strong></span>' +
+      '</div>' +
+    '</div>'
+  ).join('');
+}
+
+function renderPyramidSection(buckets, totalVendors) {
+  destroyChart('pyramid');
+  if (!buckets || !buckets.length) return;
+  chartInstances['pyramid'] = new Chart(document.getElementById('pyramidChart'), {
+    type: 'doughnut',
+    data: {
+      labels: buckets.map(b => b.label),
+      datasets: [{
+        data: buckets.map(b => b.vendorCount),
+        backgroundColor: ['#c4b5a1', '#8ba5b5', '#8fb5a3', '#4a6b5a'],
+        borderWidth: 2,
+        borderColor: '#fff',
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { position: 'right' }
+      }
+    }
+  });
+
+  document.getElementById('bucketList').innerHTML = buckets.map(b => {
+    const vPct = totalVendors ? (b.vendorCount / totalVendors * 100).toFixed(1) : '0.0';
+    return '<div class="bucket-item">' +
+      '<div>' +
+        '<strong>' + esc(b.label) + '</strong>' +
+        '<div class="bucket-examples">代表：' + (b.examples.map(esc).join('、') || '无') + '</div>' +
+      '</div>' +
+      '<div style="text-align:right;flex-shrink:0">' +
+        '<strong>' + b.vendorCount + ' 家</strong> (' + vPct + '%)<br>' +
+        '<span style="color:var(--color-text-hint);font-size:0.88em">贡献 ' + b.mealCount + ' 顿</span>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function renderScatterChart(vendors, summary) {
+  destroyChart('scatter');
+  if (!vendors || !vendors.length) return;
+
+  const points = vendors.map(v => ({
+    x: v.avgPrice,
+    y: v.avgRating2,
+    r: Math.min(22, Math.max(6, 4 + Math.sqrt(v.count) * 3.5)),
+    vendor: v.vendor,
+    count: v.count,
+    weight: v.weight,
+  }));
+
+  chartInstances['scatter'] = new Chart(document.getElementById('scatterChart'), {
+    type: 'bubble',
+    data: {
+      datasets: [{
+        label: '高频餐厅 (气泡大小=打卡次数)',
+        data: points,
+        backgroundColor: points.map(p => {
+          if (p.y >= 4.0 && p.x <= (summary.avgPrice || 27)) return 'rgba(74, 107, 90, 0.72)';
+          if (p.y >= 3.8) return 'rgba(107, 144, 128, 0.65)';
+          if (p.y >= 3.0) return 'rgba(139, 165, 181, 0.65)';
+          return 'rgba(193, 123, 107, 0.68)';
+        }),
+        borderColor: points.map(p => p.weight > 0 ? '#4a6b5a' : '#aaa'),
+        borderWidth: 1.5,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) {
+              const p = ctx.raw;
+              return p.vendor + '：' + p.count + '次 · 均价 ¥' + fmtMoney(p.x) + ' · 均分 ' + p.y.toFixed(2) + '⭐';
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: '平均付费单价 (¥)' },
+        },
+        y: {
+          title: { display: true, text: '平均评分 (⭐)' },
+          min: 1.5,
+          max: 5.0,
+        }
+      }
+    }
+  });
+}
+
+function renderTopVendors(vendors) {
+  const list = document.getElementById('topVendorsList');
+  if (!vendors || !vendors.length) {
+    list.innerHTML = '<li class="empty-message">暂无数据</li>';
+    return;
+  }
+  const maxCount = vendors[0].count || 1;
+  list.innerHTML = vendors.map((v, i) => {
+    const cls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : 'normal';
+    const pct = (v.count / maxCount * 100).toFixed(0);
+    const statusBadge = v.weight > 0
+      ? '<span class="badge-status badge-active">权重 ' + v.weight + '</span>'
+      : '<span class="badge-status badge-retired">已移出</span>';
+    return '<li class="rank-item">' +
+      '<span class="rank-num ' + cls + '">' + (i + 1) + '</span>' +
+      '<span class="rank-cell"><span class="rank-name" title="' + esc(v.vendor) + '">' + esc(v.vendor) + '</span>' + statusBadge + '</span>' +
+      '<span class="rank-bar-wrap"><span class="rank-bar" style="width:' + pct + '%"></span></span>' +
+      '<span class="rank-meta">' + v.count + '次 · ¥' + fmtMoney(v.total) + ' · ' + v.avgRating.toFixed(1) + '⭐</span>' +
+    '</li>';
+  }).join('');
+}
+
+function switchRightRankTab(mode) {
+  rightRankMode = mode;
+  document.getElementById('tabBtnRating').classList.toggle('active', mode === 'rating');
+  document.getElementById('tabBtnC1').classList.toggle('active', mode === 'c1');
+  document.getElementById('tabBtnRetired').classList.toggle('active', mode === 'retired');
+  renderRightRankList();
+}
+
+function renderRightRankList() {
+  if (!annualData) return;
+  const list = document.getElementById('rightRankList');
+  let items = [];
+  if (rightRankMode === 'rating') {
+    items = annualData.vendorRatings || [];
+  } else if (rightRankMode === 'c1') {
+    items = (annualData.exploration && annualData.exploration.c1TopVendors) || [];
+  } else {
+    items = (annualData.exploration && annualData.exploration.retiredVendors) || [];
+  }
+
+  if (!items.length) {
+    list.innerHTML = '<li class="empty-message">暂无数据</li>';
+    return;
+  }
+
+  list.innerHTML = items.map((v, i) => {
+    const cls = i === 0 ? 'top1' : i === 1 ? 'top2' : i === 2 ? 'top3' : 'normal';
+    const rVal = v.avgRating2 != null ? v.avgRating2.toFixed(2) : v.avgRating.toFixed(1);
+    const pct = rightRankMode === 'c1'
+      ? Math.min(100, (v.weight / 130 * 100)).toFixed(0)
+      : (v.avgRating / 5 * 100).toFixed(0);
+    const badge = rightRankMode === 'retired'
+      ? '<span class="badge-status badge-retired">权重 0</span>'
+      : '<span class="badge-status badge-active">权重 ' + v.weight + '</span>';
+    return '<li class="rank-item">' +
+      '<span class="rank-num ' + cls + '">' + (i + 1) + '</span>' +
+      '<span class="rank-cell"><span class="rank-name" title="' + esc(v.vendor) + '">' + esc(v.vendor) + '</span>' + badge + '</span>' +
+      '<span class="rank-bar-wrap"><span class="rank-bar" style="width:' + pct + '%"></span></span>' +
+      '<span class="rank-meta">' + rVal + '⭐ · ' + v.count + '次 · ' + (v.avgPrice != null ? '均¥' + fmtMoney(v.avgPrice) : '免费') + '</span>' +
+    '</li>';
+  }).join('');
+}
+
+
+function renderSpecialSection(special) {
+  const sec = document.getElementById('specialSection');
+  if (!special || !special.count) {
+    sec.style.display = 'none';
+    return;
+  }
+  sec.style.display = 'block';
+  document.getElementById('specialSub').textContent =
+    '周期内共有 ' + special.count + ' 顿特别用餐记录（不计入日常午餐消费统计），累计金额 ¥' +
+    fmtMoney(special.totalSpent) + '，平均评分 ' + (special.avgRating != null ? special.avgRating.toFixed(2) : '—') + ' ⭐';
+
+  document.getElementById('specialList').innerHTML = (special.items || []).map(m =>
+    '<div class="special-pill">' +
+      '<span class="sp-date">' + esc(m.date.slice(5)) + '</span>' +
+      '<span class="sp-meta">' + (m.price > 0 ? '¥' + fmtMoney(m.price) + ' · ' : '') + m.rate + '⭐</span>' +
+    '</div>'
+  ).join('');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  renderAll(annualData);
+});
+</script>
+</body>
+</html>

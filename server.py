@@ -137,11 +137,9 @@ def index():
 def common_css():
     return send_from_directory('.', 'common.css')
 
-
-@app.route('/stats')
-def stats():
-    return send_from_directory('.', 'stats.html')
-
+@app.route('/annual')
+def annual():
+    return send_from_directory('.', 'annual.html')
 
 @app.route('/api/stats')
 def api_stats():
